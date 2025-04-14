@@ -1,0 +1,123 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Instructions
+
+Use specification and guidelines as you build the app.
+
+Write the complete code for every step. Do not get lazy.
+
+Your goal is to completely finish whatever I ask for.
+
+You will see <ai_context> tags in the code. These are context tags that you should use to help you understand the codebase.
+
+## Overview
+
+This is a web app template.
+
+## Tech Stack
+
+- Frontend: Next.js, Tailwind, Shadcn
+- Package management: pnpm
+
+## Project Structure
+
+- `app` - Next.js app router
+- `components` - Shared components
+  - `ui` - UI components
+  - `utilities` - Utility components
+- `lib` - Library code
+  - `hooks` - Custom hooks
+- `public` - Static assets
+- `types` - Type definitions
+
+## Rules
+
+Follow these rules when building the app.
+
+### General Rules
+
+- Use `@` to import anything from the app unless otherwise specified
+- Use kebab case for all files and folders unless otherwise specified
+- Don't update shadcn components unless otherwise specified
+
+#### Env Rules
+
+- If you update environment variables, update the `.env.example` file
+- All environment variables should go in `.env.local`
+- Do not expose environment variables to the frontend
+- Use `NEXT_PUBLIC_` prefix for environment variables that need to be accessed from the frontend
+
+#### Type Rules
+
+Follow these rules when working with types.
+
+- When importing types, use `@/types`
+- Name files like `example-types.ts`
+- All types should go in `types`
+- Make sure to export the types in `types/index.ts`
+- Prefer interfaces over type aliases
+
+### Frontend Rules
+
+Follow these rules when working on the frontend.
+
+It uses Next.js, Tailwind, Shadcn, and Motion (formerly Framer Motion).
+
+#### General Rules
+
+- Use `lucide-react` for icons
+
+#### Components
+
+- Use divs instead of other html tags unless otherwise specified
+- Separate the main parts of a component's html with an extra blank line for visual spacing
+- Always tag a component with `use client` at the top, including layouts and pages
+
+##### Organization
+
+- All components be named using kebab case like `example-component.tsx` unless otherwise specified
+- Put components in `/_components` in the route if one-off components
+- Put components in `/components` from the root if shared components
+
+##### Client Components
+
+- Use `"use client"` at the top of the file
+- Client components can safely rely on props passed down from server components, or handle UI interactions without needing <Suspense> if there’s no async logic.
+
+Example of a client page:
+
+```tsx
+"use client";
+
+export default function ExampleClientPage() {
+  // Your code here
+}
+```
+
+Example of a client component:
+
+```tsx
+"use client";
+
+interface ExampleClientComponentProps {
+  initialData: any[];
+}
+
+export default function ExampleClientComponent({
+  initialData,
+}: ExampleClientComponentProps) {
+  // Client-side logic here
+  return <div>{initialData.length} items</div>;
+}
+```
+
+## Component Library
+
+- To add a new component, run `pnpm dlx shadcn@latest add <component>`
+
+## Motion
+
+- Use `import { motion } from "motion/react"` to import motion
