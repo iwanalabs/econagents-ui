@@ -1,73 +1,74 @@
 export interface Project {
-  id: string
-  name: string
-  description?: string
-  createdAt: string
-  agentRoles: AgentRole[]
-  agents: Agent[]
-  state: State
-  manager: Manager
-  runner: Runner
-  promptPartials?: PromptPartial[]
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  agentRoles: AgentRole[];
+  agents: Agent[];
+  state: State;
+  manager: Manager;
+  serverConfigId?: string | null;
+  promptPartials?: PromptPartial[];
+  gameId?: number | null;
 }
 
 export interface AgentRole {
-  role_id: number
-  name: string
-  llm_type: string
+  role_id: number;
+  name: string;
+  llm_type: string;
   llm_params: {
-    model_name: string
-    temperature?: number
-    top_p?: number
-    [key: string]: any
-  }
+    model_name: string;
+    temperature?: number;
+    top_p?: number;
+    [key: string]: any;
+  };
   prompts: {
-    [key: string]: string
-  }
+    [key: string]: string;
+  };
 }
 
 export interface Agent {
-  id: number
-  role_id: number
+  id: number;
+  role_id: number;
 }
 
 export interface StateField {
-  name: string
-  type: string
-  default?: any
-  default_factory?: string
-  event_key?: string
-  exclude_from_mapping?: boolean
+  name: string;
+  type: string;
+  default?: any;
+  defaultFactory?: string;
+  eventKey?: string;
+  excludeFromMapping?: boolean;
 }
 
 export interface State {
-  metaFields: StateField[]
-  privateFields: StateField[]
-  publicFields: StateField[]
+  metaInformation: StateField[];
+  privateInformation: StateField[];
+  publicInformation: StateField[];
 }
 
 export interface Manager {
-  type: string
-  [key: string]: any
+  type: string;
+  [key: string]: any;
 }
 
-export interface Runner {
-  type: string
-  hostname: string
-  port: number
-  path: string
-  game_id?: number
-  logs_dir?: string
-  log_level?: string
-  phase_transition_event?: string
-  phase_identifier_key?: string
-  observability_provider?: string
-  prompts_dir?: string
-  [key: string]: any
+export interface ServerConfig {
+  id: string;
+  name: string;
+  hostname: string;
+  port: number;
+  path: string;
+  logsDir?: string | null;
+  logLevel?: string | null;
+  phaseTransitionEvent?: string | null;
+  phaseIdentifierKey?: string | null;
+  observabilityProvider?: string | null;
+  promptsDir?: string | null;
+  [key: string]: any;
 }
 
 export interface PromptPartial {
-  id: string
-  name: string
-  content: string
+  id: string;
+  name: string;
+  content: string;
 }

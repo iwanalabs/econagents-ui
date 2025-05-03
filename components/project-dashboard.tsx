@@ -9,11 +9,15 @@ import { PlusIcon, SearchIcon, ServerIcon, XIcon } from "lucide-react"
 import { CreateProjectModal } from "@/components/create-project-modal"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Project } from "@/types/project"
+// Import the new modal
+import { ServerManagementModal } from "@/components/server-management-modal"
 
 export function ProjectDashboard() {
   const [projects, setProjects] = useLocalStorage<Project[]>("projects", [])
   const [searchQuery, setSearchQuery] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  // State for the server management modal
+  const [isServerModalOpen, setIsServerModalOpen] = useState(false)
   const router = useRouter()
 
   const filteredProjects = projects.filter((project) => project.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -21,7 +25,7 @@ export function ProjectDashboard() {
   const handleCreateProject = (project: Project) => {
     const newProjects = [...projects, project]
     setProjects(newProjects)
-    setIsModalOpen(false)
+    setIsCreateModalOpen(false)
   }
 
   const handleDeleteProject = (id: string) => {
@@ -44,9 +48,10 @@ export function ProjectDashboard() {
             <h1 className="text-lg font-semibold">EconAgents Config</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="gap-2">
+            {/* Update onClick handler */}
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsServerModalOpen(true)}>
               <ServerIcon className="h-4 w-4" />
-              Manage Server
+              Manage Servers
             </Button>
           </div>
         </div>
@@ -67,7 +72,8 @@ export function ProjectDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setIsModalOpen(true)}>
+          {/* Update onClick handler */}
+          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setIsCreateModalOpen(true)}>
             <CardContent className="flex flex-col items-center justify-center h-40 p-6">
               <PlusIcon className="h-12 w-12 text-muted-foreground mb-2" />
               <p className="text-center font-medium">Create New Project</p>
@@ -99,9 +105,15 @@ export function ProjectDashboard() {
       </main>
 
       <CreateProjectModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onCreateProject={handleCreateProject}
+      />
+
+      {/* Add the ServerManagementModal */}
+      <ServerManagementModal
+        isOpen={isServerModalOpen}
+        onClose={() => setIsServerModalOpen(false)}
       />
     </div>
   )

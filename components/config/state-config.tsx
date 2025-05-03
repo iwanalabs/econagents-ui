@@ -32,11 +32,11 @@ interface StateConfigProps {
 // Define the default meta fields that cannot be removed or edited (except maybe default value)
 // Export this constant
 export const defaultMetaFields: ReadonlyArray<StateField> = [
-  { name: "game_id", type: "int", default: 0, event_key: "game_id", exclude_from_mapping: false },
-  { name: "player_name", type: "str", default: null, event_key: "player_name", exclude_from_mapping: false }, // Use null for optional string
-  { name: "player_number", type: "int", default: null, event_key: "player_number", exclude_from_mapping: false }, // Use null for optional int
-  { name: "players", type: "list", default_factory: "list", event_key: "players", exclude_from_mapping: false },
-  { name: "phase", type: "int", default: 0, event_key: "phase", exclude_from_mapping: false },
+  { name: "game_id", type: "int", default: 0, eventKey: "game_id", excludeFromMapping: false },
+  { name: "player_name", type: "str", default: null, eventKey: "player_name", excludeFromMapping: false }, // Use null for optional string
+  { name: "player_number", type: "int", default: null, eventKey: "player_number", excludeFromMapping: false }, // Use null for optional int
+  { name: "players", type: "list", defaultFactory: "list", eventKey: "players", excludeFromMapping: false },
+  { name: "phase", type: "int", default: 0, eventKey: "phase", excludeFromMapping: false },
 ];
 
 const defaultMetaFieldNames = new Set(defaultMetaFields.map(f => f.name));
@@ -97,12 +97,12 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
     onChange({
       ...state,
-      metaFields:
-        fieldType === "metaFields" ? newFields : state.metaFields || [],
-      privateFields:
-        fieldType === "privateFields" ? newFields : state.privateFields || [],
-      publicFields:
-        fieldType === "publicFields" ? newFields : state.publicFields || [],
+      metaInformation:
+        fieldType === "metaFields" ? newFields : state.metaInformation || [],
+      privateInformation:
+        fieldType === "privateFields" ? newFields : state.privateInformation || [],
+      publicInformation:
+        fieldType === "publicFields" ? newFields : state.publicInformation || [],
     });
   };
 
@@ -137,12 +137,12 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
     onChange({
       ...state,
-      metaFields:
-        fieldType === "metaFields" ? newFields : state.metaFields || [],
-      privateFields:
-        fieldType === "privateFields" ? newFields : state.privateFields || [],
-      publicFields:
-        fieldType === "publicFields" ? newFields : state.publicFields || [],
+      metaInformation:
+        fieldType === "metaFields" ? newFields : state.metaInformation || [],
+      privateInformation:
+        fieldType === "privateFields" ? newFields : state.privateInformation || [],
+      publicInformation:
+        fieldType === "publicFields" ? newFields : state.publicInformation || [],
     });
 
     setIsDialogOpen(false);
@@ -184,9 +184,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                       Type: {field.type}
                       {field.default !== undefined && field.default !== null && // Check for null too
                         ` • Default: ${JSON.stringify(field.default)}`} {/* Use JSON.stringify for clarity */}
-                      {field.default_factory && ` • Default Factory: ${field.default_factory}`}
-                      {field.event_key && ` • Event Key: ${field.event_key}`}
-                      {field.exclude_from_mapping && ` • Excluded from mapping`}
+                      {field.defaultFactory && ` • Default Factory: ${field.defaultFactory}`}
+                      {field.eventKey && ` • Event Key: ${field.eventKey}`}
+                      {field.excludeFromMapping && ` • Excluded from mapping`}
                     </div>
                   </div>
                 </div>
@@ -239,15 +239,15 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
         </div>
 
         <TabsContent value="meta" className="mt-4">
-          {renderFields(state.metaFields || [], true)}
+          {renderFields(state.metaInformation || [], true)}
         </TabsContent>
 
         <TabsContent value="private" className="mt-4">
-          {renderFields(state.privateFields || [], false)}
+          {renderFields(state.privateInformation || [], false)}
         </TabsContent>
 
         <TabsContent value="public" className="mt-4">
-          {renderFields(state.publicFields || [], false)}
+          {renderFields(state.publicInformation || [], false)}
         </TabsContent>
       </Tabs>
 
@@ -320,11 +320,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 <Label htmlFor="default-factory">Default Factory</Label>
                 <Input
                   id="default-factory"
-                  value={currentField.default_factory || ""}
+                  value={currentField.defaultFactory || ""}
                   onChange={(e) =>
                     setCurrentField({
                       ...currentField,
-                      default_factory: e.target.value,
+                      defaultFactory: e.target.value,
                     })
                   }
                   placeholder="e.g., list"
@@ -338,11 +338,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                   <Label htmlFor="event-key">Event Key</Label>
                   <Input
                     id="event-key"
-                    value={currentField.event_key || ""}
+                    value={currentField.eventKey || ""}
                     onChange={(e) =>
                       setCurrentField({
                         ...currentField,
-                        event_key: e.target.value,
+                        eventKey: e.target.value,
                       })
                     }
                     placeholder="e.g., round"
@@ -352,11 +352,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="exclude-mapping"
-                    checked={currentField.exclude_from_mapping || false}
+                    checked={currentField.excludeFromMapping || false}
                     onCheckedChange={(checked) =>
                       setCurrentField({
                         ...currentField,
-                        exclude_from_mapping: checked === true,
+                        excludeFromMapping: checked === true,
                       })
                     }
                   />

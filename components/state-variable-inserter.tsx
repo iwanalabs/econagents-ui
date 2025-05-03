@@ -80,16 +80,16 @@ export function StateVariableInserter({
   };
 
   const publicFields = renderFields(
-    state.publicFields,
+    state.publicInformation,
     "public",
     "public_information"
   );
   const privateFields = renderFields(
-    state.privateFields,
+    state.privateInformation,
     "private",
     "private_information"
   );
-  const metaFields = renderFields(state.metaFields, "meta", "meta");
+  const metaFields = renderFields(state.metaInformation, "meta", "meta");
 
   return (
     <div className="mt-2 p-2 border rounded-md bg-muted/30">

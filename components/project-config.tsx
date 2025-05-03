@@ -14,11 +14,19 @@ import type { Project, State } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
 import { AgentsConfig } from "@/components/config/agents-config";
 import { StateConfig } from "@/components/config/state-config";
-import { ManagerConfig } from "@/components/config/manager-config";
-import { ServerConfig } from "@/components/config/server-config";
+// Remove ManagerConfig import
+// import { ManagerConfig } from "@/components/config/manager-config";
 import { PromptPartialsConfig } from "@/components/config/prompt-partials-config";
 import { exportToYaml } from "@/lib/export-yaml";
 import { useToast } from "@/hooks/use-toast";
+import { useServerConfigs } from "@/hooks/use-server-configs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ProjectConfigProps {
   projectId: string;
@@ -30,16 +38,24 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   const [activeTab, setActiveTab] = useState("basic");
   const router = useRouter();
   const { toast } = useToast();
+  // Fetch server configs
+  const [serverConfigs] = useServerConfigs();
 
   // Load the project only once when the component mounts or projectId changes
   useEffect(() => {
     const foundProject = projects.find((p) => p.id === projectId);
     if (foundProject) {
+      // Ensure project has a serverConfigId, assign default if missing and possible
+      if (!foundProject.serverConfigId && serverConfigs.length > 0) {
+        foundProject.serverConfigId = serverConfigs[0].id;
+        // Note: This change won't be saved automatically unless the user clicks save.
+        // Consider if auto-saving or prompting is needed here.
+      }
       setProject(foundProject);
     } else {
       router.push("/");
     }
-  }, [projectId, projects, router]);
+  }, [projectId, projects, router, serverConfigs]); // Add serverConfigs dependency
 
   const handleSave = () => {
     if (!project) return;
@@ -61,9 +77,33 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
 
   const handleExport = () => {
     if (!project) return;
+    if (!project.serverConfigId) {
+      toast({
+        title: "Export failed",
+        description:
+          "Please select a server configuration for this project before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the selected server config
+    const selectedServerConfig = serverConfigs.find(
+      (sc) => sc.id === project.serverConfigId
+    );
+
+    if (!selectedServerConfig) {
+      toast({
+        title: "Export failed",
+        description: `Selected server configuration (ID: ${project.serverConfigId}) not found.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      exportToYaml(project);
+      // Pass the selected server config to the export function
+      exportToYaml(project, selectedServerConfig);
       toast({
         title: "Configuration exported",
         description: "Your YAML configuration file has been downloaded.",
@@ -110,6 +150,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               size="sm"
               onClick={handleExport}
               className="gap-2"
+              disabled={!project.serverConfigId} // Disable export if no server config selected
             >
               <DownloadIcon className="h-4 w-4" />
               Export
@@ -128,16 +169,21 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
-            <TabsTrigger value="agent-roles">Agent Roles</TabsTrigger>
-            <TabsTrigger value="agents">Agents</TabsTrigger>
-            <TabsTrigger value="manager">Manager</TabsTrigger>
-            <TabsTrigger value="server">Server</TabsTrigger>
+            {/* <TabsTrigger value="agent-roles">Agent Roles</TabsTrigger> */}
+            {/* <TabsTrigger value="agents">Agents</TabsTrigger> */}
+            <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
+            {/* Remove Manager Tab Trigger */}
+            {/* <TabsTrigger value="manager">Manager</TabsTrigger> */}
+            {/* Remove Server Tab Trigger */}
+            {/* <TabsTrigger value="server">Server</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="basic">
             <Card>
               <CardContent className="pt-6">
-                <div className="grid gap-4 max-w-xl">
+                <div className="grid gap-6 max-w-xl">
+                  {" "}
+                  {/* Increased gap */}
                   <div className="grid gap-2">
                     <Label htmlFor="project-name">Project Name</Label>
                     <Input
@@ -157,6 +203,81 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       rows={4}
                     />
                   </div>
+                  {/* Add Game ID Input */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-game-id">Game ID (Optional)</Label>
+                    <Input
+                      id="project-game-id"
+                      type="number"
+                      value={project.gameId ?? ""}
+                      onChange={(e) =>
+                        updateProject({ gameId: e.target.value === "" ? null : Number(e.target.value) })
+                      }
+                      placeholder="Leave blank if not needed"
+                      min="0"
+                    />
+                  </div>
+                  {/* Add Server Config Selector */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-server-config">
+                      Server Configuration
+                    </Label>
+                    <Select
+                      value={project.serverConfigId ?? ""}
+                      onValueChange={(value) =>
+                        updateProject({ serverConfigId: value || null })
+                      }
+                      disabled={serverConfigs.length === 0}
+                    >
+                      <SelectTrigger id="project-server-config">
+                        <SelectValue
+                          placeholder={
+                            serverConfigs.length > 0
+                              ? "Select server configuration"
+                              : "No server configs available"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serverConfigs.map((config) => (
+                          <SelectItem key={config.id} value={config.id}>
+                            {config.name} ({config.hostname}:{config.port})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {serverConfigs.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Please create a server configuration first via the
+                        "Manage Servers" button on the dashboard.
+                      </p>
+                    )}
+                    {!project.serverConfigId && serverConfigs.length > 0 && (
+                      <p className="text-xs text-destructive">
+                        Please select a server configuration for this project.
+                      </p>
+                    )}
+                  </div>
+                  {/* Add Manager Type Selector */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="manager-type">Manager Type</Label>
+                    <Select
+                      value={project.manager.type}
+                      onValueChange={(type) => updateProject({ manager: { ...project.manager, type } })}
+                    >
+                      <SelectTrigger id="manager-type">
+                        <SelectValue placeholder="Select manager type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="TurnBasedPhaseManager">
+                          Turn-Based Phase Manager
+                        </SelectItem>
+                        <SelectItem value="HybridPhaseManager">
+                          Hybrid Phase Manager
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -169,6 +290,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             />
           </TabsContent>
 
+          {/* Remove Agent Roles Tab Content */}
+          {/*
           <TabsContent value="agent-roles">
             <AgentRolesConfig
               agentRoles={project.agentRoles}
@@ -177,7 +300,10 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               promptPartials={project.promptPartials || []}
             />
           </TabsContent>
+          */}
 
+          {/* Remove Agents Tab Content */}
+          {/*
           <TabsContent value="agents">
             <AgentsConfig
               agents={project.agents}
@@ -185,6 +311,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onChange={(agents) => updateProject({ agents })}
             />
           </TabsContent>
+          */}
 
           <TabsContent value="prompt-partials">
             <PromptPartialsConfig
@@ -193,20 +320,43 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               state={project.state}
             />
           </TabsContent>
-
+          
+          {/* Add combined Agents & Roles Tab Content */}
+          <TabsContent value="agents-roles" className="space-y-6">
+            {/* Agent Roles Section */}
+            <AgentRolesConfig
+              agentRoles={project.agentRoles}
+              onChange={(agentRoles) => updateProject({ agentRoles })}
+              state={project.state}
+              promptPartials={project.promptPartials || []}
+            />
+            {/* Agents Section */}
+            <AgentsConfig
+              agents={project.agents}
+              agentRoles={project.agentRoles}
+              onChange={(agents) => updateProject({ agents })}
+            />
+          </TabsContent>
+          
+          {/* Remove Manager Tab Content */}
+          {/*
           <TabsContent value="manager">
             <ManagerConfig
               manager={project.manager}
               onChange={(manager) => updateProject({ manager })}
             />
           </TabsContent>
+          */}
 
+          {/* Remove Server Tab Content */}
+          {/*
           <TabsContent value="server">
             <ServerConfig
               runner={project.runner}
               onChange={(runner) => updateProject({ runner })}
             />
           </TabsContent>
+          */}
         </Tabs>
       </main>
     </div>

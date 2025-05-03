@@ -60,9 +60,9 @@ export function AgentRolesConfig({ agentRoles, onChange, promptPartials, state }
   // Create a combined state object for the variable inserter
   const stateForInserter: State = {
     ...state,
-    metaFields: [
+    metaInformation: [
       ...defaultMetaFields,
-      ...(state.metaFields || []).filter(
+      ...(state.metaInformation || []).filter(
         (field) => !defaultMetaFields.some((defaultField) => defaultField.name === field.name)
       ),
     ],
@@ -780,50 +780,75 @@ export function AgentRolesConfig({ agentRoles, onChange, promptPartials, state }
                                   {previewModes[`phase_${index}_user`] ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                                 </Button>
                               </div>
-                              <div className="grid grid-cols-[3fr_1fr] gap-4">
-                                <div className="space-y-2">
-                                  {previewModes[`phase_${index}_user`] ? (
-            <PromptPreview
-              rawPrompt={phasePrompt.user}
-              promptPartials={promptPartials}
-              className="min-h-[80px] border rounded-md p-3 bg-background text-sm whitespace-pre-wrap"
-            />
-          ) : (
-            <>
-              <Textarea
-                ref={ensureRef(`phase_${index}_user`)}
-                id={`phase-user-${index}`}
-                value={phasePrompt.user}
-                onChange={(e) =>
-                  handlePhasePromptChange(
-                    index,
-                    "user",
-                    e.target.value
-                  )
-                }
-                rows={4}
-                placeholder={`User prompt specific to phase ${phasePrompt.phase || '...'}`}
-      className="min-h-[80px]"
-    />
-    <StateVariableInserter
-      state={stateForInserter} // Use combined state
-      textareaRef={ensureRef(`phase_${index}_user`)}
-      onInsert={(newValue) => handlePhasePromptChange(index, "user", newValue)}
-    />
-            </>
-          )}
-        </div>
-        <PartialsList
-          promptPartials={promptPartials}
-          onInsertPartial={(partialName) =>
-            handleInsertPartial(
-              ensureRef(`phase_${index}_user`),
-              partialName,
-              (val) => handlePhasePromptChange(index, "user", val)
-            )
-          }
-        />
-      </div>
+                              <div className="space-y-2">
+                                {previewModes[`phase_${index}_user`] ? (
+                                  <PromptPreview
+                                    rawPrompt={phasePrompt.user}
+                                    promptPartials={promptPartials}
+                                    className="min-h-[80px] border rounded-md p-3 bg-background text-sm whitespace-pre-wrap"
+                                  />
+                                ) : (
+                                  <>
+                                    <Textarea
+                                      ref={ensureRef(`phase_${index}_user`)}
+                                      id={`phase-user-${index}`}
+                                      value={phasePrompt.user}
+                                      onChange={(e) =>
+                                        handlePhasePromptChange(
+                                          index,
+                                          "user",
+                                          e.target.value
+                                        )
+                                      }
+                                      rows={4}
+                                      placeholder={`User prompt specific to phase ${phasePrompt.phase || '...'}`}
+                                      className="min-h-[80px]"
+                                    />
+                                    {/* Add Toggle Buttons */}
+                                    <div className="flex gap-2 mt-1">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => toggleInserterVisibility(`phase_${index}_user`, 'state')}
+                                        className="gap-1 text-xs"
+                                      >
+                                        <VariableIcon className="h-3 w-3" />
+                                        {isInserterVisible(`phase_${index}_user`, 'state') ? 'Hide' : 'Show'} State Vars
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => toggleInserterVisibility(`phase_${index}_user`, 'partials')}
+                                        className="gap-1 text-xs"
+                                      >
+                                        <ListIcon className="h-3 w-3" />
+                                        {isInserterVisible(`phase_${index}_user`, 'partials') ? 'Hide' : 'Show'} Partials
+                                      </Button>
+                                    </div>
+                                    {/* Conditionally render StateVariableInserter */}
+                                    {isInserterVisible(`phase_${index}_user`, 'state') && (
+                                      <StateVariableInserter
+                                        state={stateForInserter} // Use combined state
+                                        textareaRef={ensureRef(`phase_${index}_user`)}
+                                        onInsert={(newValue) => handlePhasePromptChange(index, "user", newValue)}
+                                      />
+                                    )}
+                                    {/* Conditionally render PartialsList */}
+                                    {isInserterVisible(`phase_${index}_user`, 'partials') && (
+                                      <PartialsList
+                                        promptPartials={promptPartials}
+                                        onInsertPartial={(partialName) =>
+                                          handleInsertPartial(
+                                            ensureRef(`phase_${index}_user`),
+                                            partialName,
+                                            (val) => handlePhasePromptChange(index, "user", val)
+                                          )
+                                        }
+                                      />
+                                    )}
+                                  </>
+                                )}
+                              </div>
     </div>
                           </div>
                         </AccordionContent>
