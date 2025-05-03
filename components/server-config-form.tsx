@@ -149,7 +149,10 @@ export function ServerConfigForm({
                 placeholder="./logs"
               />
             </div>
-            <div className="grid gap-2"> {/* Placeholder or another field */} </div>
+            <div className="grid gap-2">
+              {" "}
+              {/* Placeholder or another field */}{" "}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -221,16 +224,6 @@ export function ServerConfigForm({
                 placeholder="e.g., current_phase"
               />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="prompts-dir">Prompts Directory (Optional)</Label>
-            <Input
-              id="prompts-dir"
-              value={config.promptsDir || ""} // Use config instead of runner
-              onChange={(e) => handleChange("prompts_dir", e.target.value)}
-              placeholder="./prompts"
-            />
           </div>
         </div>
       </CardContent>

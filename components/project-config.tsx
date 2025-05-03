@@ -167,8 +167,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
+            <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
             {/* <TabsTrigger value="agent-roles">Agent Roles</TabsTrigger> */}
             {/* <TabsTrigger value="agents">Agents</TabsTrigger> */}
             <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
@@ -211,7 +211,12 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       type="number"
                       value={project.gameId ?? ""}
                       onChange={(e) =>
-                        updateProject({ gameId: e.target.value === "" ? null : Number(e.target.value) })
+                        updateProject({
+                          gameId:
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                        })
                       }
                       placeholder="Leave blank if not needed"
                       min="0"
@@ -263,7 +268,9 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                     <Label htmlFor="manager-type">Manager Type</Label>
                     <Select
                       value={project.manager.type}
-                      onValueChange={(type) => updateProject({ manager: { ...project.manager, type } })}
+                      onValueChange={(type) =>
+                        updateProject({ manager: { ...project.manager, type } })
+                      }
                     >
                       <SelectTrigger id="manager-type">
                         <SelectValue placeholder="Select manager type" />
@@ -320,7 +327,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               state={project.state}
             />
           </TabsContent>
-          
+
           {/* Add combined Agents & Roles Tab Content */}
           <TabsContent value="agents-roles" className="space-y-6">
             {/* Agent Roles Section */}
@@ -337,7 +344,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onChange={(agents) => updateProject({ agents })}
             />
           </TabsContent>
-          
+
           {/* Remove Manager Tab Content */}
           {/*
           <TabsContent value="manager">

@@ -102,7 +102,8 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
   yaml += "state:\n";
 
   // Helper to format state fields
-  const formatStateFields = (fields: StateField[], indent: string): string => { // Use StateField type
+  const formatStateFields = (fields: StateField[], indent: string): string => {
+    // Use StateField type
     let fieldYaml = "";
     fields.forEach((field) => {
       fieldYaml += `${indent}- name: "${field.name}"\n`;
@@ -168,24 +169,33 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
     return fieldYaml;
   };
 
-  if (project.state.metaInformation || defaultMetaFields.length > 0) { // Check if either default or custom meta fields exist
+  if (project.state.metaInformation || defaultMetaFields.length > 0) {
+    // Check if either default or custom meta fields exist
     yaml += "  meta_information:\n"; // Changed key name
     // Combine default fields with custom ones, ensuring defaults are present and custom ones don't override defaults by name
     const customMetaFields = project.state.metaInformation || [];
-    const defaultMetaFieldNames = new Set(defaultMetaFields.map(f => f.name));
+    const defaultMetaFieldNames = new Set(defaultMetaFields.map((f) => f.name));
     const combinedMetaFields = [
       ...defaultMetaFields,
-      ...customMetaFields.filter(field => !defaultMetaFieldNames.has(field.name))
+      ...customMetaFields.filter(
+        (field) => !defaultMetaFieldNames.has(field.name)
+      ),
     ];
     yaml += formatStateFields(combinedMetaFields, "    ");
   }
 
-  if (project.state.privateInformation && project.state.privateInformation.length > 0) {
+  if (
+    project.state.privateInformation &&
+    project.state.privateInformation.length > 0
+  ) {
     yaml += "  private_information:\n"; // Changed key name
     yaml += formatStateFields(project.state.privateInformation, "    ");
   }
 
-  if (project.state.publicInformation && project.state.publicInformation.length > 0) {
+  if (
+    project.state.publicInformation &&
+    project.state.publicInformation.length > 0
+  ) {
     yaml += "  public_information:\n"; // Changed key name
     yaml += formatStateFields(project.state.publicInformation, "    ");
   }
@@ -234,9 +244,6 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
     serverConfig.observabilityProvider !== "none"
   ) {
     yaml += `  observability_provider: "${serverConfig.observabilityProvider}"\n`;
-  }
-  if (serverConfig.promptsDir) {
-    yaml += `  prompts_dir: "${serverConfig.promptsDir}"\n`;
   }
 
   // Create a safe filename from the project name

@@ -63,7 +63,6 @@ export interface ServerConfig {
   phaseTransitionEvent?: string | null;
   phaseIdentifierKey?: string | null;
   observabilityProvider?: string | null;
-  promptsDir?: string | null;
   [key: string]: any;
 }
 
