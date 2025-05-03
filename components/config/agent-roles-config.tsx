@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PlusIcon, Trash2Icon, EditIcon, LockIcon, EyeIcon, EyeOffIcon, VariableIcon, ListIcon } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import type { AgentRole } from "@/types/project"
+import type { AgentRole, Agent } from "@/types/project"
 import { PromptPartial } from "@/types"
 import { State } from "@/types"
 import { Separator } from "@/components/ui/separator"
@@ -27,6 +27,8 @@ interface AgentRolesConfigProps {
   onChange: (agentRoles: AgentRole[]) => void
   promptPartials: PromptPartial[]
   state: State
+  agents: Agent[]
+  onAgentsChange: (agents: Agent[]) => void
 }
 
 // Helper type for phase-specific prompts within the state
@@ -36,7 +38,14 @@ interface PhasePrompt {
   user: string
 }
 
-export function AgentRolesConfig({ agentRoles, onChange, promptPartials, state }: AgentRolesConfigProps) {
+export function AgentRolesConfig({
+  agentRoles,
+  onChange,
+  promptPartials,
+  state,
+  agents,
+  onAgentsChange,
+}: AgentRolesConfigProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   // Role state only needs default prompts, phase prompts are managed separately in UI state
@@ -214,9 +223,17 @@ export function AgentRolesConfig({ agentRoles, onChange, promptPartials, state }
   }
 
   const handleDeleteRole = (index: number) => {
+    // Get the role ID before deleting the role
+    const roleIdToDelete = agentRoles[index].role_id;
+
+    // Filter out the deleted role
     const newRoles = [...agentRoles]
     newRoles.splice(index, 1)
     onChange(newRoles)
+
+    // Filter out agents associated with the deleted role
+    const newAgents = agents.filter(agent => agent.role_id !== roleIdToDelete);
+    onAgentsChange(newAgents); // Call the callback to update agents in the parent
   }
 
   const handleSaveRole = () => {

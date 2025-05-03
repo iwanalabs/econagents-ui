@@ -119,8 +119,11 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   };
 
   const updateProject = (updates: Partial<Project>) => {
-    if (!project) return;
-    setProject({ ...project, ...updates });
+    // Use functional update form of setProject to avoid issues with stale state
+    setProject(prevProject => {
+      if (!prevProject) return null; // Should ideally not happen if project is loaded
+      return { ...prevProject, ...updates };
+    });
   };
 
   if (!project) {
@@ -336,6 +339,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onChange={(agentRoles) => updateProject({ agentRoles })}
               state={project.state}
               promptPartials={project.promptPartials || []}
+              agents={project.agents}
+              onAgentsChange={(agents) => updateProject({ agents })}
             />
             {/* Agents Section */}
             <AgentsConfig
