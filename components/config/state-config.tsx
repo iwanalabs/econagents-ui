@@ -1,129 +1,222 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PlusIcon, Trash2Icon, EditIcon } from "lucide-react"
-import type { State, StateField } from "@/types/project"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusIcon, Trash2Icon, EditIcon, LockIcon } from "lucide-react";
+import type { State, StateField } from "@/types/project";
 
 interface StateConfigProps {
-  state: State
-  onChange: (state: State) => void
+  state: State;
+  onChange: (state: State) => void;
 }
 
+// Define the default meta fields that cannot be removed or edited (except maybe default value)
+// Export this constant
+export const defaultMetaFields: ReadonlyArray<StateField> = [
+  { name: "game_id", type: "int", default: 0, event_key: "game_id", exclude_from_mapping: false },
+  { name: "player_name", type: "str", default: null, event_key: "player_name", exclude_from_mapping: false }, // Use null for optional string
+  { name: "player_number", type: "int", default: null, event_key: "player_number", exclude_from_mapping: false }, // Use null for optional int
+  { name: "players", type: "list", default_factory: "list", event_key: "players", exclude_from_mapping: false },
+  { name: "phase", type: "int", default: 0, event_key: "phase", exclude_from_mapping: false },
+];
+
+const defaultMetaFieldNames = new Set(defaultMetaFields.map(f => f.name));
+
 export function StateConfig({ state, onChange }: StateConfigProps) {
-  const [activeTab, setActiveTab] = useState("meta")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState("meta");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [currentField, setCurrentField] = useState<StateField>({
     name: "",
     type: "str",
     default: "",
-  })
+  });
 
   const handleAddField = () => {
     setCurrentField({
       name: "",
       type: "str",
       default: "",
-    })
-    setEditingIndex(null)
-    setIsDialogOpen(true)
-  }
+    });
+    setEditingIndex(null);
+    setIsDialogOpen(true);
+  };
 
   const handleEditField = (field: StateField, index: number) => {
-    setCurrentField({ ...field })
-    setEditingIndex(index)
-    setIsDialogOpen(true)
-  }
+    // Prevent editing default meta fields
+    if (activeTab === "meta" && defaultMetaFieldNames.has(field.name)) {
+      // Optionally show a toast or message here
+      console.warn(`Cannot edit default meta field: ${field.name}`);
+      return;
+    }
+    setCurrentField({ ...field });
+    setEditingIndex(index);
+    setIsDialogOpen(true);
+  };
 
   const handleDeleteField = (index: number) => {
-    const fieldType = activeTab === "meta" ? "metaFields" : activeTab === "private" ? "privateFields" : "publicFields"
+    const fieldType =
+      activeTab === "meta"
+        ? "metaFields"
+        : activeTab === "private"
+        ? "privateFields"
+        : "publicFields";
 
     // Ensure the array exists before trying to modify it
-    const currentFields = state[fieldType] || []
-    const newFields = [...currentFields]
-    newFields.splice(index, 1)
+    const currentFields = state[fieldType] || [];
+    const fieldToDelete = currentFields[index];
+
+    // Prevent deletion of default meta fields
+    if (fieldType === "metaFields" && defaultMetaFieldNames.has(fieldToDelete.name)) {
+      // Optionally show a toast or message here
+      console.warn(`Cannot delete default meta field: ${fieldToDelete.name}`);
+      return;
+    }
+
+    const newFields = [...currentFields];
+    newFields.splice(index, 1);
 
     onChange({
       ...state,
-      metaFields: fieldType === "metaFields" ? newFields : state.metaFields || [],
-      privateFields: fieldType === "privateFields" ? newFields : state.privateFields || [],
-      publicFields: fieldType === "publicFields" ? newFields : state.publicFields || [],
-    })
-  }
+      metaFields:
+        fieldType === "metaFields" ? newFields : state.metaFields || [],
+      privateFields:
+        fieldType === "privateFields" ? newFields : state.privateFields || [],
+      publicFields:
+        fieldType === "publicFields" ? newFields : state.publicFields || [],
+    });
+  };
 
   const handleSaveField = () => {
-    if (!currentField.name) return
+    if (!currentField.name) return;
 
-    const fieldType = activeTab === "meta" ? "metaFields" : activeTab === "private" ? "privateFields" : "publicFields"
+    const fieldType =
+      activeTab === "meta"
+        ? "metaFields"
+        : activeTab === "private"
+        ? "privateFields"
+        : "publicFields";
+
+    // Prevent adding meta fields with names matching defaults
+    if (fieldType === "metaFields" && defaultMetaFieldNames.has(currentField.name) && editingIndex === null) {
+       // Optionally show a toast or message here
+       console.error(`Cannot add a meta field with the reserved name: ${currentField.name}`);
+       // Maybe clear the input or keep the dialog open? For now, just return.
+       return;
+    }
 
     // Ensure the array exists before trying to modify it
-    const currentFields = state[fieldType] || []
-    let newFields: StateField[]
+    const currentFields = state[fieldType] || [];
+    let newFields: StateField[];
 
     if (editingIndex !== null) {
-      newFields = [...currentFields]
-      newFields[editingIndex] = currentField
+      newFields = [...currentFields];
+      newFields[editingIndex] = currentField;
     } else {
-      newFields = [...currentFields, currentField]
+      newFields = [...currentFields, currentField];
     }
 
     onChange({
       ...state,
-      metaFields: fieldType === "metaFields" ? newFields : state.metaFields || [],
-      privateFields: fieldType === "privateFields" ? newFields : state.privateFields || [],
-      publicFields: fieldType === "publicFields" ? newFields : state.publicFields || [],
-    })
+      metaFields:
+        fieldType === "metaFields" ? newFields : state.metaFields || [],
+      privateFields:
+        fieldType === "privateFields" ? newFields : state.privateFields || [],
+      publicFields:
+        fieldType === "publicFields" ? newFields : state.publicFields || [],
+    });
 
-    setIsDialogOpen(false)
-  }
+    setIsDialogOpen(false);
+  };
 
-  const renderFields = (fields: StateField[]) => {
-    if (fields.length === 0) {
+  const renderFields = (fields: StateField[], isMetaTab: boolean) => {
+    // Combine default and custom fields for the meta tab
+    const displayFields = isMetaTab
+      ? [...defaultMetaFields, ...fields.filter(f => !defaultMetaFieldNames.has(f.name))]
+      : fields;
+
+    if (displayFields.length === 0) {
       return (
         <Card className="border-dashed">
           <CardContent className="pt-6 text-center text-muted-foreground">
             No fields defined. Add a field to get started.
           </CardContent>
         </Card>
-      )
+      );
     }
 
     return (
       <div className="space-y-4">
-        {fields.map((field, index) => (
-          <Card key={index}>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">{field.name}</CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  Type: {field.type}
-                  {field.default !== undefined && ` • Default: ${field.default}`}
-                  {field.event_key && ` • Event Key: ${field.event_key}`}
-                  {field.exclude_from_mapping && ` • Excluded from mapping`}
+        {displayFields.map((field, index) => {
+          const isDefault = isMetaTab && defaultMetaFieldNames.has(field.name);
+          // Adjust index for deletion/editing if it's a custom meta field
+          const originalIndex = isMetaTab && !isDefault
+            ? fields.findIndex(f => f.name === field.name)
+            : index;
+
+          return (
+            <Card key={field.name}> {/* Use field.name as key for stability */}
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isDefault && <LockIcon className="h-4 w-4 text-muted-foreground" title="Default Field (Locked)" />}
+                  <div>
+                    <CardTitle className="text-lg">{field.name}</CardTitle>
+                    <div className="text-sm text-muted-foreground">
+                      Type: {field.type}
+                      {field.default !== undefined && field.default !== null && // Check for null too
+                        ` • Default: ${JSON.stringify(field.default)}`} {/* Use JSON.stringify for clarity */}
+                      {field.default_factory && ` • Default Factory: ${field.default_factory}`}
+                      {field.event_key && ` • Event Key: ${field.event_key}`}
+                      {field.exclude_from_mapping && ` • Excluded from mapping`}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex space-x-2">
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteField(index)}>
-                  <Trash2Icon className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleEditField(field, index)}>
-                  <EditIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteField(originalIndex)}
+                    disabled={isDefault} // Disable delete for default fields
+                    aria-label={isDefault ? `Cannot delete default field ${field.name}` : `Delete field ${field.name}`}
+                  >
+                    <Trash2Icon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditField(field, originalIndex)}
+                    disabled={isDefault} // Disable edit for default fields
+                    aria-label={isDefault ? `Cannot edit default field ${field.name}` : `Edit field ${field.name}`}
+                  >
+                    <EditIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -133,9 +226,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="meta">Meta Fields</TabsTrigger>
-          <TabsTrigger value="private">Private Fields</TabsTrigger>
-          <TabsTrigger value="public">Public Fields</TabsTrigger>
+          <TabsTrigger value="meta">Meta Information</TabsTrigger>
+          <TabsTrigger value="private">Private Information</TabsTrigger>
+          <TabsTrigger value="public">Public Information</TabsTrigger>
         </TabsList>
 
         <div className="mt-4 flex justify-end">
@@ -146,22 +239,24 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
         </div>
 
         <TabsContent value="meta" className="mt-4">
-          {renderFields(state.metaFields || [])}
+          {renderFields(state.metaFields || [], true)}
         </TabsContent>
 
         <TabsContent value="private" className="mt-4">
-          {renderFields(state.privateFields || [])}
+          {renderFields(state.privateFields || [], false)}
         </TabsContent>
 
         <TabsContent value="public" className="mt-4">
-          {renderFields(state.publicFields || [])}
+          {renderFields(state.publicFields || [], false)}
         </TabsContent>
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingIndex !== null ? "Edit Field" : "Add Field"}</DialogTitle>
+            <DialogTitle>
+              {editingIndex !== null ? "Edit Field" : "Add Field"}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -169,9 +264,16 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               <Input
                 id="field-name"
                 value={currentField.name}
-                onChange={(e) => setCurrentField({ ...currentField, name: e.target.value })}
+                onChange={(e) =>
+                  setCurrentField({ ...currentField, name: e.target.value })
+                }
                 placeholder="e.g., game_id"
               />
+              {activeTab === 'meta' && defaultMetaFieldNames.has(currentField.name) && editingIndex === null && (
+                <p className="text-xs text-destructive mt-1">
+                  Cannot use a reserved meta field name.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -179,7 +281,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 <Label htmlFor="field-type">Type</Label>
                 <Select
                   value={currentField.type}
-                  onValueChange={(value) => setCurrentField({ ...currentField, type: value })}
+                  onValueChange={(value) =>
+                    setCurrentField({ ...currentField, type: value })
+                  }
                 >
                   <SelectTrigger id="field-type">
                     <SelectValue placeholder="Select type" />
@@ -265,12 +369,15 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveField} disabled={!currentField.name}>
+            <Button
+              onClick={handleSaveField}
+              disabled={!currentField.name || (activeTab === 'meta' && defaultMetaFieldNames.has(currentField.name) && editingIndex === null)}
+            >
               Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

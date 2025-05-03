@@ -111,23 +111,9 @@ export function AgentsConfig({ agents, agentRoles, onChange }: AgentsConfigProps
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{editingIndex !== null ? "Edit Agent" : "Add Agent"}</DialogTitle>
+            <DialogTitle>{editingIndex !== null ? `Edit Agent ${currentAgent.id}` : "Add Agent"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="agent-id">Agent ID</Label>
-              <Input
-                id="agent-id"
-                type="number"
-                value={currentAgent.id}
-                onChange={(e) =>
-                  setCurrentAgent({
-                    ...currentAgent,
-                    id: Number.parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="role-id">Role</Label>
               <Select

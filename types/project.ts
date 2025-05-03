@@ -8,6 +8,7 @@ export interface Project {
   state: State
   manager: Manager
   runner: Runner
+  promptPartials?: PromptPartial[]
 }
 
 export interface AgentRole {
@@ -63,4 +64,10 @@ export interface Runner {
   observability_provider?: string
   prompts_dir?: string
   [key: string]: any
+}
+
+export interface PromptPartial {
+  id: string
+  name: string
+  content: string
 }

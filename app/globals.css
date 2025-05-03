@@ -120,3 +120,38 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add styles for prompt partial preview */
+.prompt-partial {
+  display: inline; /* Ensure spans flow correctly */
+  padding: 0.1em 0.3em;
+  border-radius: 0.25em;
+  margin: 0 0.1em;
+}
+
+.prompt-partial-content {
+  background-color: oklch(var(--accent) / 0.8);
+  border: 1px dashed oklch(var(--accent-foreground) / 0.4);
+  color: oklch(var(--accent-foreground));
+}
+
+.prompt-partial-invalid {
+  background-color: oklch(var(--destructive) / 0.1);
+  border: 1px solid oklch(var(--destructive) / 0.5);
+  color: oklch(var(--destructive));
+  text-decoration: line-through;
+  font-family: var(--font-mono);
+}
+
+/* Ensure dark mode variants if needed, though oklch might handle it */
+.dark .prompt-partial-content {
+  background-color: oklch(var(--accent) / 0.7);
+  border: 1px dashed oklch(var(--accent-foreground) / 0.5);
+  color: oklch(var(--accent-foreground));
+}
+
+.dark .prompt-partial-invalid {
+   background-color: oklch(var(--destructive) / 0.2);
+   border: 1px solid oklch(var(--destructive) / 0.6);
+   color: oklch(var(--destructive));
+}

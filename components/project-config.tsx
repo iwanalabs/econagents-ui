@@ -1,85 +1,90 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeftIcon, DownloadIcon, SaveIcon } from "lucide-react"
-import { useLocalStorage } from "@/hooks/use-local-storage"
-import type { Project } from "@/types/project"
-import { AgentRolesConfig } from "@/components/config/agent-roles-config"
-import { AgentsConfig } from "@/components/config/agents-config"
-import { StateConfig } from "@/components/config/state-config"
-import { ManagerConfig } from "@/components/config/manager-config"
-import { ServerConfig } from "@/components/config/server-config"
-import { exportToYaml } from "@/lib/export-yaml"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeftIcon, DownloadIcon, SaveIcon } from "lucide-react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import type { Project, State } from "@/types/project";
+import { AgentRolesConfig } from "@/components/config/agent-roles-config";
+import { AgentsConfig } from "@/components/config/agents-config";
+import { StateConfig } from "@/components/config/state-config";
+import { ManagerConfig } from "@/components/config/manager-config";
+import { ServerConfig } from "@/components/config/server-config";
+import { PromptPartialsConfig } from "@/components/config/prompt-partials-config";
+import { exportToYaml } from "@/lib/export-yaml";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectConfigProps {
-  projectId: string
+  projectId: string;
 }
 
 export function ProjectConfig({ projectId }: ProjectConfigProps) {
-  const [projects] = useLocalStorage<Project[]>("projects", [])
-  const [project, setProject] = useState<Project | null>(null)
-  const [activeTab, setActiveTab] = useState("basic")
-  const router = useRouter()
-  const { toast } = useToast()
+  const [projects] = useLocalStorage<Project[]>("projects", []);
+  const [project, setProject] = useState<Project | null>(null);
+  const [activeTab, setActiveTab] = useState("basic");
+  const router = useRouter();
+  const { toast } = useToast();
 
   // Load the project only once when the component mounts or projectId changes
   useEffect(() => {
-    const foundProject = projects.find((p) => p.id === projectId)
+    const foundProject = projects.find((p) => p.id === projectId);
     if (foundProject) {
-      setProject(foundProject)
+      setProject(foundProject);
     } else {
-      router.push("/")
+      router.push("/");
     }
-  }, [projectId, projects, router])
+  }, [projectId, projects, router]);
 
   const handleSave = () => {
-    if (!project) return
+    if (!project) return;
 
     // Get the current projects from localStorage directly
-    const currentProjects = JSON.parse(localStorage.getItem("projects") || "[]")
-    const updatedProjects = currentProjects.map((p: Project) => (p.id === project.id ? project : p))
-    localStorage.setItem("projects", JSON.stringify(updatedProjects))
+    const currentProjects = JSON.parse(
+      localStorage.getItem("projects") || "[]"
+    );
+    const updatedProjects = currentProjects.map((p: Project) =>
+      p.id === project.id ? project : p
+    );
+    localStorage.setItem("projects", JSON.stringify(updatedProjects));
 
     toast({
       title: "Project saved",
       description: "Your project configuration has been saved successfully.",
-    })
-  }
+    });
+  };
 
   const handleExport = () => {
-    if (!project) return
+    if (!project) return;
 
     try {
-      exportToYaml(project)
+      exportToYaml(project);
       toast({
         title: "Configuration exported",
         description: "Your YAML configuration file has been downloaded.",
-      })
+      });
     } catch (error) {
-      console.error("Error exporting YAML:", error)
+      console.error("Error exporting YAML:", error);
       toast({
         title: "Export failed",
         description: "There was an error exporting your configuration.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const updateProject = (updates: Partial<Project>) => {
-    if (!project) return
-    setProject({ ...project, ...updates })
-  }
+    if (!project) return;
+    setProject({ ...project, ...updates });
+  };
 
   if (!project) {
-    return <div className="container py-8">Loading project...</div>
+    return <div className="container py-8">Loading project...</div>;
   }
 
   return (
@@ -87,14 +92,25 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
       <header className="border-b border-border">
         <div className="container flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/")}
+            >
               <ChevronLeftIcon className="h-5 w-5" />
             </Button>
-            <div className="bg-primary text-primary-foreground p-1 rounded text-sm font-bold">EA</div>
+            <div className="bg-primary text-primary-foreground p-1 rounded text-sm font-bold">
+              EA
+            </div>
             <h1 className="text-lg font-semibold">Project: {project.name}</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="gap-2"
+            >
               <DownloadIcon className="h-4 w-4" />
               Export
             </Button>
@@ -110,9 +126,10 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
+            <TabsTrigger value="state">State</TabsTrigger>
             <TabsTrigger value="agent-roles">Agent Roles</TabsTrigger>
             <TabsTrigger value="agents">Agents</TabsTrigger>
-            <TabsTrigger value="state">State</TabsTrigger>
             <TabsTrigger value="manager">Manager</TabsTrigger>
             <TabsTrigger value="server">Server</TabsTrigger>
           </TabsList>
@@ -134,7 +151,9 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                     <Textarea
                       id="project-description"
                       value={project.description || ""}
-                      onChange={(e) => updateProject({ description: e.target.value })}
+                      onChange={(e) =>
+                        updateProject({ description: e.target.value })
+                      }
                       rows={4}
                     />
                   </div>
@@ -143,10 +162,19 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             </Card>
           </TabsContent>
 
+          <TabsContent value="state">
+            <StateConfig
+              state={project.state}
+              onChange={(state) => updateProject({ state })}
+            />
+          </TabsContent>
+
           <TabsContent value="agent-roles">
             <AgentRolesConfig
               agentRoles={project.agentRoles}
               onChange={(agentRoles) => updateProject({ agentRoles })}
+              state={project.state}
+              promptPartials={project.promptPartials || []}
             />
           </TabsContent>
 
@@ -158,19 +186,29 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             />
           </TabsContent>
 
-          <TabsContent value="state">
-            <StateConfig state={project.state} onChange={(state) => updateProject({ state })} />
+          <TabsContent value="prompt-partials">
+            <PromptPartialsConfig
+              promptPartials={project.promptPartials || []}
+              onChange={(promptPartials) => updateProject({ promptPartials })}
+              state={project.state}
+            />
           </TabsContent>
 
           <TabsContent value="manager">
-            <ManagerConfig manager={project.manager} onChange={(manager) => updateProject({ manager })} />
+            <ManagerConfig
+              manager={project.manager}
+              onChange={(manager) => updateProject({ manager })}
+            />
           </TabsContent>
 
           <TabsContent value="server">
-            <ServerConfig runner={project.runner} onChange={(runner) => updateProject({ runner })} />
+            <ServerConfig
+              runner={project.runner}
+              onChange={(runner) => updateProject({ runner })}
+            />
           </TabsContent>
         </Tabs>
       </main>
     </div>
-  )
+  );
 }

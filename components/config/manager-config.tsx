@@ -1,18 +1,24 @@
-"use client"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Manager } from "@/types/project"
+"use client";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Manager } from "@/types/project";
 
 interface ManagerConfigProps {
-  manager: Manager
-  onChange: (manager: Manager) => void
+  manager: Manager;
+  onChange: (manager: Manager) => void;
 }
 
 export function ManagerConfig({ manager, onChange }: ManagerConfigProps) {
   const handleTypeChange = (type: string) => {
-    onChange({ ...manager, type })
-  }
+    onChange({ ...manager, type });
+  };
 
   return (
     <div className="space-y-4">
@@ -30,9 +36,12 @@ export function ManagerConfig({ manager, onChange }: ManagerConfigProps) {
                   <SelectValue placeholder="Select manager type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TurnBasedPhaseManager">Turn-Based Phase Manager</SelectItem>
-                  <SelectItem value="ContinuousPhaseManager">Continuous Phase Manager</SelectItem>
-                  <SelectItem value="SimplePhaseManager">Simple Phase Manager</SelectItem>
+                  <SelectItem value="TurnBasedPhaseManager">
+                    Turn-Based Phase Manager
+                  </SelectItem>
+                  <SelectItem value="HybridPhaseManager">
+                    Hybrid Phase Manager
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -40,5 +49,5 @@ export function ManagerConfig({ manager, onChange }: ManagerConfigProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

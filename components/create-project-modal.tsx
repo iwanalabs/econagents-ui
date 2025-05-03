@@ -41,6 +41,7 @@ export function CreateProjectModal({ isOpen, onClose, onCreateProject }: CreateP
         hostname: "localhost",
         port: 8765,
         path: "wss",
+        promptPartials: [],
       },
     }
 
