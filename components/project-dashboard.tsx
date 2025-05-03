@@ -6,10 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { PlusIcon, SearchIcon, ServerIcon, XIcon } from "lucide-react"
+// Import AlertDialog components
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CreateProjectModal } from "@/components/create-project-modal"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import type { Project } from "@/types/project"
-// Import the new modal
 import { ServerManagementModal } from "@/components/server-management-modal"
 
 export function ProjectDashboard() {
@@ -18,6 +28,9 @@ export function ProjectDashboard() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // State for the server management modal
   const [isServerModalOpen, setIsServerModalOpen] = useState(false)
+  // State for delete confirmation
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false)
+  const [projectToDeleteId, setProjectToDeleteId] = useState<string | null>(null)
   const router = useRouter()
 
   const filteredProjects = projects.filter((project) => project.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -28,11 +41,24 @@ export function ProjectDashboard() {
     setIsCreateModalOpen(false)
   }
 
+  // Opens the confirmation dialog
   const handleDeleteProject = (id: string) => {
+    setProjectToDeleteId(id)
+    setIsConfirmDeleteDialogOpen(true)
+  }
+
+  // Performs the actual deletion after confirmation
+  const confirmDeleteProject = () => {
+    if (!projectToDeleteId) return
+
     // Get current projects directly from localStorage to avoid stale state
     const currentProjects = JSON.parse(localStorage.getItem("projects") || "[]")
-    const newProjects = currentProjects.filter((project: Project) => project.id !== id)
+    const newProjects = currentProjects.filter((project: Project) => project.id !== projectToDeleteId)
     setProjects(newProjects)
+
+    // Reset state and close dialog
+    setProjectToDeleteId(null)
+    setIsConfirmDeleteDialogOpen(false)
   }
 
   const handleOpenProject = (id: string) => {
@@ -48,7 +74,6 @@ export function ProjectDashboard() {
             <h1 className="text-lg font-semibold">EconAgents Config</h1>
           </div>
           <div className="flex items-center space-x-2">
-            {/* Update onClick handler */}
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsServerModalOpen(true)}>
               <ServerIcon className="h-4 w-4" />
               Manage Servers
@@ -72,7 +97,6 @@ export function ProjectDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Update onClick handler */}
           <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setIsCreateModalOpen(true)}>
             <CardContent className="flex flex-col items-center justify-center h-40 p-6">
               <PlusIcon className="h-12 w-12 text-muted-foreground mb-2" />
@@ -88,7 +112,7 @@ export function ProjectDashboard() {
                 className="absolute top-2 right-2 h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleDeleteProject(project.id)
+                  handleDeleteProject(project.id) // This now opens the dialog
                 }}
               >
                 <XIcon className="h-4 w-4" />
@@ -110,11 +134,26 @@ export function ProjectDashboard() {
         onCreateProject={handleCreateProject}
       />
 
-      {/* Add the ServerManagementModal */}
       <ServerManagementModal
         isOpen={isServerModalOpen}
         onClose={() => setIsServerModalOpen(false)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isConfirmDeleteDialogOpen} onOpenChange={setIsConfirmDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the project and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDeleteId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProject}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
