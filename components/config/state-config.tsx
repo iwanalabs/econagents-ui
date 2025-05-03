@@ -21,7 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusIcon, Trash2Icon, EditIcon, LockIcon } from "lucide-react";
+import {
+  PlusIcon,
+  Trash2Icon,
+  EditIcon,
+  LockIcon,
+  Baseline,
+  KeyRound,
+  Link2,
+  Link2Off,
+  Variable,
+} from "lucide-react";
 import type { State, StateField } from "@/types/project";
 
 interface StateConfigProps {
@@ -32,14 +42,56 @@ interface StateConfigProps {
 // Define the default meta fields that cannot be removed or edited (except maybe default value)
 // Export this constant
 export const defaultMetaFields: ReadonlyArray<StateField> = [
-  { name: "game_id", type: "int", default: 0, eventKey: "game_id", excludeFromMapping: false },
-  { name: "player_name", type: "str", default: null, eventKey: "player_name", excludeFromMapping: false }, // Use null for optional string
-  { name: "player_number", type: "int", default: null, eventKey: "player_number", excludeFromMapping: false }, // Use null for optional int
-  { name: "players", type: "list", defaultFactory: "list", eventKey: "players", excludeFromMapping: false },
-  { name: "phase", type: "int", default: 0, eventKey: "phase", excludeFromMapping: false },
+  {
+    name: "game_id",
+    type: "int",
+    default: 0,
+    eventKey: "game_id",
+    excludeFromMapping: false,
+  },
+  {
+    name: "player_name",
+    type: "str",
+    default: null,
+    eventKey: "player_name",
+    excludeFromMapping: false,
+  }, // Use null for optional string
+  {
+    name: "player_number",
+    type: "int",
+    default: null,
+    eventKey: "player_number",
+    excludeFromMapping: false,
+  }, // Use null for optional int
+  {
+    name: "players",
+    type: "list",
+    defaultFactory: "list",
+    eventKey: "players",
+    excludeFromMapping: false,
+  },
+  {
+    name: "phase",
+    type: "int",
+    default: 0,
+    eventKey: "phase",
+    excludeFromMapping: false,
+  },
 ];
 
-const defaultMetaFieldNames = new Set(defaultMetaFields.map(f => f.name));
+const defaultMetaFieldNames = new Set(defaultMetaFields.map((f) => f.name));
+
+// Define a mapping from field type to Tailwind CSS color classes
+const typeColorMapping: Record<string, string> = {
+  str: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  int: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  float: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  bool: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  list: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+  dict: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+};
+const defaultTypeColor =
+  "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"; // Fallback color
 
 export function StateConfig({ state, onChange }: StateConfigProps) {
   const [activeTab, setActiveTab] = useState("meta");
@@ -74,19 +126,27 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
   };
 
   const handleDeleteField = (index: number) => {
-    const fieldType =
+    // Determine the correct key based on the active tab
+    const fieldTypeKey =
       activeTab === "meta"
-        ? "metaFields"
+        ? "metaInformation"
         : activeTab === "private"
-        ? "privateFields"
-        : "publicFields";
+        ? "privateInformation"
+        : "publicInformation";
 
     // Ensure the array exists before trying to modify it
-    const currentFields = state[fieldType] || [];
+    const currentFields = state[fieldTypeKey] || []; // Use the correct key
+    if (index < 0 || index >= currentFields.length) {
+      console.error("Index out of bounds for deletion.");
+      return; // Prevent accessing invalid index
+    }
     const fieldToDelete = currentFields[index];
 
     // Prevent deletion of default meta fields
-    if (fieldType === "metaFields" && defaultMetaFieldNames.has(fieldToDelete.name)) {
+    if (
+      fieldTypeKey === "metaInformation" &&
+      defaultMetaFieldNames.has(fieldToDelete.name)
+    ) {
       // Optionally show a toast or message here
       console.warn(`Cannot delete default meta field: ${fieldToDelete.name}`);
       return;
@@ -97,52 +157,81 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
     onChange({
       ...state,
-      metaInformation:
-        fieldType === "metaFields" ? newFields : state.metaInformation || [],
-      privateInformation:
-        fieldType === "privateFields" ? newFields : state.privateInformation || [],
-      publicInformation:
-        fieldType === "publicFields" ? newFields : state.publicInformation || [],
+      [fieldTypeKey]: newFields, // Use the correct key here as well
     });
   };
 
   const handleSaveField = () => {
     if (!currentField.name) return;
 
-    const fieldType =
+    const fieldTypeKey =
       activeTab === "meta"
-        ? "metaFields"
+        ? "metaInformation"
         : activeTab === "private"
-        ? "privateFields"
-        : "publicFields";
+        ? "privateInformation"
+        : "publicInformation";
+
+    // Work on a copy to modify before saving
+    let fieldToSave: StateField = { ...currentField };
+
+    // Automatically set/unset defaultFactory based on type
+    if (fieldToSave.type === "list" || fieldToSave.type === "dict") {
+      fieldToSave.defaultFactory = fieldToSave.type;
+    } else {
+      // Ensure defaultFactory is not present for other types
+      delete fieldToSave.defaultFactory;
+    }
 
     // Prevent adding meta fields with names matching defaults
-    if (fieldType === "metaFields" && defaultMetaFieldNames.has(currentField.name) && editingIndex === null) {
-       // Optionally show a toast or message here
-       console.error(`Cannot add a meta field with the reserved name: ${currentField.name}`);
-       // Maybe clear the input or keep the dialog open? For now, just return.
-       return;
+    if (
+      fieldTypeKey === "metaInformation" &&
+      defaultMetaFieldNames.has(fieldToSave.name) &&
+      editingIndex === null
+    ) {
+      console.error(
+        `Cannot add a meta field with the reserved name: ${fieldToSave.name}`
+      );
+      // Optionally show a toast notification here
+      // toast({ title: "Error", description: `Cannot use reserved meta field name: ${fieldToSave.name}`, variant: "destructive" });
+      return;
     }
 
     // Ensure the array exists before trying to modify it
-    const currentFields = state[fieldType] || [];
+    const currentFields = state[fieldTypeKey] || [];
     let newFields: StateField[];
 
     if (editingIndex !== null) {
-      newFields = [...currentFields];
-      newFields[editingIndex] = currentField;
+      // Ensure we don't try to edit a default meta field's core properties if somehow opened
+      const originalField = currentFields[editingIndex];
+      if (
+        fieldTypeKey === "metaInformation" &&
+        defaultMetaFieldNames.has(originalField.name)
+      ) {
+        // Allow editing only 'default' for default meta fields? Or block all edits?
+        // For now, let's just update the default value if changed.
+        // More robust logic might be needed depending on requirements.
+        console.warn(
+          `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`
+        );
+        // Example: Only allow updating default value
+        // newFields = [...currentFields];
+        // newFields[editingIndex] = { ...originalField, default: fieldToSave.default };
+        // Let's stick to the original plan: block editing default fields entirely via handleEditField.
+        // If somehow the dialog opens, this save should ideally not proceed or only update allowed fields.
+        // Reverting to just updating the field as is, relying on handleEditField to prevent opening the dialog.
+        newFields = [...currentFields];
+        newFields[editingIndex] = fieldToSave; // Use the modified field
+      } else {
+        newFields = [...currentFields];
+        newFields[editingIndex] = fieldToSave; // Use the modified field
+      }
     } else {
-      newFields = [...currentFields, currentField];
+      newFields = [...currentFields, fieldToSave]; // Use the modified field
     }
 
     onChange({
       ...state,
-      metaInformation:
-        fieldType === "metaFields" ? newFields : state.metaInformation || [],
-      privateInformation:
-        fieldType === "privateFields" ? newFields : state.privateInformation || [],
-      publicInformation:
-        fieldType === "publicFields" ? newFields : state.publicInformation || [],
+      [fieldTypeKey]: newFields,
     });
 
     setIsDialogOpen(false);
@@ -151,7 +240,10 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
   const renderFields = (fields: StateField[], isMetaTab: boolean) => {
     // Combine default and custom fields for the meta tab
     const displayFields = isMetaTab
-      ? [...defaultMetaFields, ...fields.filter(f => !defaultMetaFieldNames.has(f.name))]
+      ? [
+          ...defaultMetaFields,
+          ...fields.filter((f) => !defaultMetaFieldNames.has(f.name)),
+        ]
       : fields;
 
     if (displayFields.length === 0) {
@@ -165,53 +257,136 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {displayFields.map((field, index) => {
           const isDefault = isMetaTab && defaultMetaFieldNames.has(field.name);
-          // Adjust index for deletion/editing if it's a custom meta field
-          const originalIndex = isMetaTab && !isDefault
-            ? fields.findIndex(f => f.name === field.name)
-            : index;
+          const originalIndex =
+            isMetaTab && !isDefault
+              ? fields.findIndex((f) => f.name === field.name)
+              : index;
 
           return (
-            <Card key={field.name}> {/* Use field.name as key for stability */}
-              <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isDefault && <LockIcon className="h-4 w-4 text-muted-foreground" title="Default Field (Locked)" />}
-                  <div>
-                    <CardTitle className="text-lg">{field.name}</CardTitle>
-                    <div className="text-sm text-muted-foreground">
-                      Type: {field.type}
-                      {field.default !== undefined && field.default !== null && // Check for null too
-                        ` • Default: ${JSON.stringify(field.default)}`} {/* Use JSON.stringify for clarity */}
-                      {field.defaultFactory && ` • Default Factory: ${field.defaultFactory}`}
-                      {field.eventKey && ` • Event Key: ${field.eventKey}`}
-                      {field.excludeFromMapping && ` • Excluded from mapping`}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteField(originalIndex)}
-                    disabled={isDefault} // Disable delete for default fields
-                    aria-label={isDefault ? `Cannot delete default field ${field.name}` : `Delete field ${field.name}`}
-                  >
-                    <Trash2Icon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditField(field, originalIndex)}
-                    disabled={isDefault} // Disable edit for default fields
-                    aria-label={isDefault ? `Cannot edit default field ${field.name}` : `Edit field ${field.name}`}
-                  >
-                    <EditIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
+            <div
+              key={field.name}
+              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-3 rounded-md border bg-card p-3 shadow-sm"
+            >
+              {/* Lock Icon (Column 1) */}
+              <div className="flex justify-center items-center w-5">
+                {isDefault && (
+                  <span title="Default Field (Locked)">
+                    <LockIcon className="h-4 w-4 text-muted-foreground" />
+                  </span>
+                )}
+              </div>
+
+              {/* Field Name (Column 2 - Takes remaining space) */}
+              <p className="text-sm font-medium text-foreground truncate min-w-0">
+                {field.name}
+              </p>
+
+              {/* Type (Column 3) */}
+              <span
+                className={`inline-flex justify-center items-center rounded-sm px-2 py-0.5 text-xs font-medium w-[70px] text-center ${
+                  typeColorMapping[field.type] ?? defaultTypeColor
+                }`}
+                title={`Type: ${field.type}`}
+              >
+                {field.type}
+              </span>
+
+              {/* Default Value (Column 4) */}
+              <span
+                className="inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate"
+                title={`Default: ${
+                  field.default === undefined || field.default === null
+                    ? "None"
+                    : JSON.stringify(field.default)
+                }`}
+              >
+                <Variable className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                <span className="truncate">
+                  {field.default !== undefined && field.default !== null
+                    ? JSON.stringify(field.default)
+                    : "None"}
+                </span>
+              </span>
+
+              {/* Event Key (Column 5 - Meta only) */}
+              <span
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate ${
+                  !isMetaTab && "invisible" // Hide column if not the meta tab
+                }`}
+                title={
+                  isMetaTab ? `Event Key: ${field.eventKey || "None"}` : ""
+                }
+              >
+                {isMetaTab ? (
+                  <>
+                    <KeyRound className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                    <span className="truncate">{field.eventKey || "None"}</span>
+                  </>
+                ) : (
+                  // Render placeholder content to maintain layout even when hidden
+                  <>&nbsp;</>
+                )}
+              </span>
+
+              {/* Exclude Mapping (Column 6 - Meta only) */}
+              <span
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate ${
+                  !isMetaTab && "invisible" // Hide column if not the meta tab
+                }`}
+                title={
+                  isMetaTab
+                    ? field.excludeFromMapping
+                      ? "Mapping: N"
+                      : "Mapping: Y"
+                    : ""
+                }
+              >
+                {isMetaTab ? (
+                  <>
+                    <Link2 className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                    {field.excludeFromMapping ? "N" : "Y"}
+                  </>
+                ) : (
+                  // Render placeholder content to maintain layout even when hidden
+                  <>&nbsp;</>
+                )}
+              </span>
+
+              {/* Action Buttons (Column 7) */}
+              <div className="flex flex-shrink-0 space-x-1 justify-self-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleDeleteField(originalIndex)}
+                  disabled={isDefault}
+                  aria-label={
+                    isDefault
+                      ? `Cannot delete default field ${field.name}`
+                      : `Delete field ${field.name}`
+                  }
+                >
+                  <Trash2Icon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleEditField(field, originalIndex)}
+                  disabled={isDefault}
+                  aria-label={
+                    isDefault
+                      ? `Cannot edit default field ${field.name}`
+                      : `Edit field ${field.name}`
+                  }
+                >
+                  <EditIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -269,11 +444,13 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 }
                 placeholder="e.g., game_id"
               />
-              {activeTab === 'meta' && defaultMetaFieldNames.has(currentField.name) && editingIndex === null && (
-                <p className="text-xs text-destructive mt-1">
-                  Cannot use a reserved meta field name.
-                </p>
-              )}
+              {activeTab === "meta" &&
+                defaultMetaFieldNames.has(currentField.name) &&
+                editingIndex === null && (
+                  <p className="text-xs text-destructive mt-1">
+                    Cannot use a reserved meta field name.
+                  </p>
+                )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -315,23 +492,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               </div>
             </div>
 
-            {currentField.type === "list" || currentField.type === "dict" ? (
-              <div className="grid gap-2">
-                <Label htmlFor="default-factory">Default Factory</Label>
-                <Input
-                  id="default-factory"
-                  value={currentField.defaultFactory || ""}
-                  onChange={(e) =>
-                    setCurrentField({
-                      ...currentField,
-                      defaultFactory: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., list"
-                />
-              </div>
-            ) : null}
-
             {activeTab === "meta" && (
               <>
                 <div className="grid gap-2">
@@ -371,7 +531,12 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
             </Button>
             <Button
               onClick={handleSaveField}
-              disabled={!currentField.name || (activeTab === 'meta' && defaultMetaFieldNames.has(currentField.name) && editingIndex === null)}
+              disabled={
+                !currentField.name ||
+                (activeTab === "meta" &&
+                  defaultMetaFieldNames.has(currentField.name) &&
+                  editingIndex === null)
+              }
             >
               Save
             </Button>
