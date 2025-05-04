@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusIcon, SearchIcon, ServerIcon, XIcon } from "lucide-react";
-// Import AlertDialog components
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +25,7 @@ export function ProjectDashboard() {
   const [projects, setProjects] = useLocalStorage<Project[]>("projects", []);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // State for the server management modal
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
-  // State for delete confirmation
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [projectToDeleteId, setProjectToDeleteId] = useState<string | null>(
@@ -46,17 +43,14 @@ export function ProjectDashboard() {
     setIsCreateModalOpen(false);
   };
 
-  // Opens the confirmation dialog
   const handleDeleteProject = (id: string) => {
     setProjectToDeleteId(id);
     setIsConfirmDeleteDialogOpen(true);
   };
 
-  // Performs the actual deletion after confirmation
   const confirmDeleteProject = () => {
     if (!projectToDeleteId) return;
 
-    // Get current projects directly from localStorage to avoid stale state
     const currentProjects = JSON.parse(
       localStorage.getItem("projects") || "[]",
     );
@@ -65,7 +59,6 @@ export function ProjectDashboard() {
     );
     setProjects(newProjects);
 
-    // Reset state and close dialog
     setProjectToDeleteId(null);
     setIsConfirmDeleteDialogOpen(false);
   };

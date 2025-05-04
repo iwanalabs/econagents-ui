@@ -37,15 +37,12 @@ export function CreateProjectModal({
 }: CreateProjectModalProps) {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
-  // Add state for gameId
   const [projectGameId, setProjectGameId] = useState<number | null>(null);
-  // Fetch server configs
   const [serverConfigs] = useServerConfigs();
   const [selectedServerConfigId, setSelectedServerConfigId] = useState<
     string | null
   >(serverConfigs.length > 0 ? serverConfigs[0].id : null);
 
-  // Update selected server config if serverConfigs list changes (e.g., on initial load)
   useEffect(() => {
     if (!selectedServerConfigId && serverConfigs.length > 0) {
       setSelectedServerConfigId(serverConfigs[0].id);
@@ -55,13 +52,12 @@ export function CreateProjectModal({
   const handleSubmit = () => {
     if (!projectName.trim() || !selectedServerConfigId) return;
 
-    // Add game_id to the new project object
     const newProject: Project = {
       id: crypto.randomUUID(),
       name: projectName,
       description: projectDescription,
       createdAt: new Date().toISOString(),
-      gameId: projectGameId, // Add game_id here
+      gameId: projectGameId,
       agentRoles: [],
       agents: [],
       state: {
@@ -77,7 +73,6 @@ export function CreateProjectModal({
     };
 
     onCreateProject(newProject);
-    // Reset state
     setProjectName("");
     setProjectDescription("");
     setProjectGameId(null);
@@ -112,7 +107,6 @@ export function CreateProjectModal({
               rows={3}
             />
           </div>
-          {/* Add Server Config Selector */}
           <div className="grid gap-2">
             <Label htmlFor="server-config">Server Configuration *</Label>
             <Select

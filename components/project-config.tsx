@@ -10,12 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeftIcon, DownloadIcon, SaveIcon } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import type { Project, State } from "@/types/project";
+import type { Project } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
 import { AgentsConfig } from "@/components/config/agents-config";
 import { StateConfig } from "@/components/config/state-config";
-// Remove ManagerConfig import
-// import { ManagerConfig } from "@/components/config/manager-config";
 import { PromptPartialsConfig } from "@/components/config/prompt-partials-config";
 import { exportToYaml } from "@/lib/export-yaml";
 import { useToast } from "@/hooks/use-toast";
@@ -38,34 +36,28 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   const [activeTab, setActiveTab] = useState("basic");
   const router = useRouter();
   const { toast } = useToast();
-  // Fetch server configs
   const [serverConfigs] = useServerConfigs();
 
-  // Load the project only once when the component mounts or projectId changes
   useEffect(() => {
     const foundProject = projects.find((p) => p.id === projectId);
     if (foundProject) {
-      // Ensure project has a serverConfigId, assign default if missing and possible
       if (!foundProject.serverConfigId && serverConfigs.length > 0) {
         foundProject.serverConfigId = serverConfigs[0].id;
-        // Note: This change won't be saved automatically unless the user clicks save.
-        // Consider if auto-saving or prompting is needed here.
       }
       setProject(foundProject);
     } else {
       router.push("/");
     }
-  }, [projectId, projects, router, serverConfigs]); // Add serverConfigs dependency
+  }, [projectId, projects, router, serverConfigs]);
 
   const handleSave = () => {
     if (!project) return;
 
-    // Get the current projects from localStorage directly
     const currentProjects = JSON.parse(
-      localStorage.getItem("projects") || "[]",
+      localStorage.getItem("projects") || "[]"
     );
     const updatedProjects = currentProjects.map((p: Project) =>
-      p.id === project.id ? project : p,
+      p.id === project.id ? project : p
     );
     localStorage.setItem("projects", JSON.stringify(updatedProjects));
 
@@ -87,9 +79,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
       return;
     }
 
-    // Find the selected server config
     const selectedServerConfig = serverConfigs.find(
-      (sc) => sc.id === project.serverConfigId,
+      (sc) => sc.id === project.serverConfigId
     );
 
     if (!selectedServerConfig) {
@@ -102,7 +93,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     }
 
     try {
-      // Pass the selected server config to the export function
       exportToYaml(project, selectedServerConfig);
       toast({
         title: "Configuration exported",
@@ -119,9 +109,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   };
 
   const updateProject = (updates: Partial<Project>) => {
-    // Use functional update form of setProject to avoid issues with stale state
     setProject((prevProject) => {
-      if (!prevProject) return null; // Should ideally not happen if project is loaded
+      if (!prevProject) return null;
       return { ...prevProject, ...updates };
     });
   };
@@ -153,7 +142,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               size="sm"
               onClick={handleExport}
               className="gap-2"
-              disabled={!project.serverConfigId} // Disable export if no server config selected
+              disabled={!project.serverConfigId}
             >
               <DownloadIcon className="h-4 w-4" />
               Export
@@ -172,13 +161,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
             <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
-            {/* <TabsTrigger value="agent-roles">Agent Roles</TabsTrigger> */}
-            {/* <TabsTrigger value="agents">Agents</TabsTrigger> */}
             <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
-            {/* Remove Manager Tab Trigger */}
-            {/* <TabsTrigger value="manager">Manager</TabsTrigger> */}
-            {/* Remove Server Tab Trigger */}
-            {/* <TabsTrigger value="server">Server</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="basic">
@@ -186,7 +169,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               <CardContent className="pt-6">
                 <div className="grid gap-6 max-w-xl">
                   {" "}
-                  {/* Increased gap */}
                   <div className="grid gap-2">
                     <Label htmlFor="project-name">Project Name</Label>
                     <Input
@@ -206,7 +188,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       rows={4}
                     />
                   </div>
-                  {/* Add Game ID Input */}
                   <div className="grid gap-2">
                     <Label htmlFor="project-game-id">Game ID (Optional)</Label>
                     <Input
@@ -225,7 +206,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       min="0"
                     />
                   </div>
-                  {/* Add Server Config Selector */}
                   <div className="grid gap-2">
                     <Label htmlFor="project-server-config">
                       Server Configuration
@@ -266,7 +246,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       </p>
                     )}
                   </div>
-                  {/* Add Manager Type Selector */}
                   <div className="grid gap-2">
                     <Label htmlFor="manager-type">Manager Type</Label>
                     <Select
@@ -300,29 +279,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             />
           </TabsContent>
 
-          {/* Remove Agent Roles Tab Content */}
-          {/*
-          <TabsContent value="agent-roles">
-            <AgentRolesConfig
-              agentRoles={project.agentRoles}
-              onChange={(agentRoles) => updateProject({ agentRoles })}
-              state={project.state}
-              promptPartials={project.promptPartials || []}
-            />
-          </TabsContent>
-          */}
-
-          {/* Remove Agents Tab Content */}
-          {/*
-          <TabsContent value="agents">
-            <AgentsConfig
-              agents={project.agents}
-              agentRoles={project.agentRoles}
-              onChange={(agents) => updateProject({ agents })}
-            />
-          </TabsContent>
-          */}
-
           <TabsContent value="prompt-partials">
             <PromptPartialsConfig
               promptPartials={project.promptPartials || []}
@@ -349,26 +305,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onChange={(agents) => updateProject({ agents })}
             />
           </TabsContent>
-
-          {/* Remove Manager Tab Content */}
-          {/*
-          <TabsContent value="manager">
-            <ManagerConfig
-              manager={project.manager}
-              onChange={(manager) => updateProject({ manager })}
-            />
-          </TabsContent>
-          */}
-
-          {/* Remove Server Tab Content */}
-          {/*
-          <TabsContent value="server">
-            <ServerConfig
-              runner={project.runner}
-              onChange={(runner) => updateProject({ runner })}
-            />
-          </TabsContent>
-          */}
         </Tabs>
       </main>
     </div>

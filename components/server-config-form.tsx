@@ -30,7 +30,7 @@ export function ServerConfigForm({
 
   const handleChange = (
     field: keyof ServerConfig,
-    value: string | number | null,
+    value: string | number | null
   ) => {
     const processedValue = value === "" ? null : value;
     const updatedConfig = { ...config, [field]: processedValue };
@@ -39,9 +39,13 @@ export function ServerConfigForm({
   };
 
   const handleNumberChange = (field: keyof ServerConfig, value: string) => {
-    const num = value === "" ? null : Number.parseInt(value, 10);
-    if (value === "" || (!isNaN(num) && num >= 0)) {
-      handleChange(field, num);
+    if (value === "") {
+      handleChange(field, null);
+    } else {
+      const num = Number.parseInt(value, 10);
+      if (!isNaN(num) && num >= 0) {
+        handleChange(field, num);
+      }
     }
   };
 
