@@ -26,7 +26,6 @@ export function StateVariableInserter({
     if (!textareaRef.current) return;
 
     const { selectionStart, selectionEnd, value } = textareaRef.current;
-    // Updated Jinja2 syntax with spaces
     const textToInsert = `{{ ${variablePath} }}`;
 
     const newValue =
@@ -36,8 +35,6 @@ export function StateVariableInserter({
 
     onInsert(newValue);
 
-    // Set cursor position after the inserted text
-    // Need setTimeout to ensure the update happens after the state change is rendered
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -47,11 +44,10 @@ export function StateVariableInserter({
     }, 0);
   };
 
-  // Map internal type names to desired Jinja2 variable names
   const renderFields = (
     fields: StateField[],
     type: string,
-    jinjaTypeName: string
+    jinjaTypeName: string,
   ) => {
     if (!fields || fields.length === 0) {
       return null;
@@ -67,7 +63,6 @@ export function StateVariableInserter({
               key={`${type}-${field.name}`}
               variant="secondary"
               className="cursor-pointer"
-              // Use jinjaTypeName for the path
               onClick={() => handleInsert(`${jinjaTypeName}.${field.name}`)}
               title={`Click to insert {{ ${jinjaTypeName}.${field.name} }}`}
             >
@@ -82,12 +77,12 @@ export function StateVariableInserter({
   const publicFields = renderFields(
     state.publicInformation,
     "public",
-    "public_information"
+    "public_information",
   );
   const privateFields = renderFields(
     state.privateInformation,
     "private",
-    "private_information"
+    "private_information",
   );
   const metaFields = renderFields(state.metaInformation, "meta", "meta");
 

@@ -62,10 +62,10 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
 
     // Get the current projects from localStorage directly
     const currentProjects = JSON.parse(
-      localStorage.getItem("projects") || "[]"
+      localStorage.getItem("projects") || "[]",
     );
     const updatedProjects = currentProjects.map((p: Project) =>
-      p.id === project.id ? project : p
+      p.id === project.id ? project : p,
     );
     localStorage.setItem("projects", JSON.stringify(updatedProjects));
 
@@ -89,7 +89,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
 
     // Find the selected server config
     const selectedServerConfig = serverConfigs.find(
-      (sc) => sc.id === project.serverConfigId
+      (sc) => sc.id === project.serverConfigId,
     );
 
     if (!selectedServerConfig) {
@@ -120,7 +120,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
 
   const updateProject = (updates: Partial<Project>) => {
     // Use functional update form of setProject to avoid issues with stale state
-    setProject(prevProject => {
+    setProject((prevProject) => {
       if (!prevProject) return null; // Should ideally not happen if project is loaded
       return { ...prevProject, ...updates };
     });

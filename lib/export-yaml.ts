@@ -67,7 +67,7 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
           ([key]) =>
             !["model_name", "temperature", "top_p"].includes(key) &&
             role.llm_params[key] !== undefined &&
-            role.llm_params[key] !== null
+            role.llm_params[key] !== null,
         )
         .forEach(([key, value]) => {
           yaml += `      ${key}: ${JSON.stringify(value)}\n`; // Use JSON.stringify for safety
@@ -137,7 +137,7 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
               // Try parsing JSON, otherwise quote it
               try {
                 defaultValue = JSON.stringify(
-                  JSON.parse(String(field.default))
+                  JSON.parse(String(field.default)),
                 );
               } catch {
                 defaultValue = `"${field.default}"`;
@@ -178,7 +178,7 @@ export function exportToYaml(project: Project, serverConfig: ServerConfig) {
     const combinedMetaFields = [
       ...defaultMetaFields,
       ...customMetaFields.filter(
-        (field) => !defaultMetaFieldNames.has(field.name)
+        (field) => !defaultMetaFieldNames.has(field.name),
       ),
     ];
     yaml += formatStateFields(combinedMetaFields, "    ");

@@ -82,7 +82,7 @@ export function CreateProjectModal({
     setProjectDescription("");
     setProjectGameId(null);
     setSelectedServerConfigId(
-      serverConfigs.length > 0 ? serverConfigs[0].id : null
+      serverConfigs.length > 0 ? serverConfigs[0].id : null,
     );
   };
 

@@ -1,19 +1,26 @@
-"use client"
+"use client";
 
-import React from "react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Label } from "@/components/ui/label"
-import type { PromptPartial } from "@/types"
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import type { PromptPartial } from "@/types";
 
 interface PartialsListProps {
-  promptPartials: PromptPartial[]
-  onInsertPartial: (partialName: string) => void
+  promptPartials: PromptPartial[];
+  onInsertPartial: (partialName: string) => void;
 }
 
-export function PartialsList({ promptPartials, onInsertPartial }: PartialsListProps) {
+export function PartialsList({
+  promptPartials,
+  onInsertPartial,
+}: PartialsListProps) {
   if (!promptPartials || promptPartials.length === 0) {
-    return <p className="text-xs text-muted-foreground mt-1">No prompt partials defined.</p>
+    return (
+      <p className="text-xs text-muted-foreground mt-1">
+        No prompt partials defined.
+      </p>
+    );
   }
 
   return (
@@ -36,5 +43,5 @@ export function PartialsList({ promptPartials, onInsertPartial }: PartialsListPr
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }

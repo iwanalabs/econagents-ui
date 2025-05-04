@@ -1,41 +1,72 @@
-"use client"
+"use client";
 
-import { useState, useRef, createRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusIcon, Trash2Icon, EditIcon, LockIcon, EyeIcon, EyeOffIcon, VariableIcon, ListIcon } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import type { AgentRole, Agent } from "@/types/project"
-import { PromptPartial } from "@/types"
-import { State } from "@/types"
-import { Separator } from "@/components/ui/separator"
-import { StateVariableInserter } from "@/components/state-variable-inserter"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import { PartialsList } from "@/components/partials-list"
-import { PromptPreview } from "@/components/prompt-preview"
-// Import defaultMetaFields
+import { useState, useRef, createRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  PlusIcon,
+  Trash2Icon,
+  EditIcon,
+  LockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  VariableIcon,
+  ListIcon,
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import type { AgentRole, Agent } from "@/types/project";
+import { PromptPartial } from "@/types";
+import { State } from "@/types";
+import { Separator } from "@/components/ui/separator";
+import { StateVariableInserter } from "@/components/state-variable-inserter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PartialsList } from "@/components/partials-list";
+import { PromptPreview } from "@/components/prompt-preview";
 import { defaultMetaFields } from "./state-config";
 
 interface AgentRolesConfigProps {
-  agentRoles: AgentRole[]
-  onChange: (agentRoles: AgentRole[]) => void
-  promptPartials: PromptPartial[]
-  state: State
-  agents: Agent[]
-  onAgentsChange: (agents: Agent[]) => void
+  agentRoles: AgentRole[];
+  onChange: (agentRoles: AgentRole[]) => void;
+  promptPartials: PromptPartial[];
+  state: State;
+  agents: Agent[];
+  onAgentsChange: (agents: Agent[]) => void;
 }
 
 // Helper type for phase-specific prompts within the state
 interface PhasePrompt {
-  phase: number | string // Allow string initially for input flexibility
-  system: string
-  user: string
+  phase: number | string; // Allow string initially for input flexibility
+  system: string;
+  user: string;
 }
 
 export function AgentRolesConfig({
@@ -46,8 +77,8 @@ export function AgentRolesConfig({
   agents,
   onAgentsChange,
 }: AgentRolesConfigProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   // Role state only needs default prompts, phase prompts are managed separately in UI state
   const [currentRole, setCurrentRole] = useState<
     Omit<AgentRole, "prompts"> & { prompts: Record<string, string> }
@@ -59,41 +90,46 @@ export function AgentRolesConfig({
       model_name: "gpt-4o",
     },
     prompts: { system: "", user: "" }, // Initialize with default keys
-  })
-  const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([])
-  const [activeMainTab, setActiveMainTab] = useState("basic")
-  const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({})
+  });
+  const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
+  const [activeMainTab, setActiveMainTab] = useState("basic");
+  const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
   // State to manage visibility of StateVariableInserter and PartialsList per prompt key
-  const [inserterVisibility, setInserterVisibility] = useState<Record<string, { state: boolean; partials: boolean }>>({})
-  
+  const [inserterVisibility, setInserterVisibility] = useState<
+    Record<string, { state: boolean; partials: boolean }>
+  >({});
+
   // Create a combined state object for the variable inserter
   const stateForInserter: State = {
     ...state,
     metaInformation: [
       ...defaultMetaFields,
       ...(state.metaInformation || []).filter(
-        (field) => !defaultMetaFields.some((defaultField) => defaultField.name === field.name)
+        (field) =>
+          !defaultMetaFields.some(
+            (defaultField) => defaultField.name === field.name,
+          ),
       ),
     ],
   };
-  
+
   // Refs for Textareas - Simplified as we removed custom prompts
   const contentRefs = useRef<{
-    system: React.RefObject<HTMLTextAreaElement>
-    user: React.RefObject<HTMLTextAreaElement>
-    [key: string]: React.RefObject<HTMLTextAreaElement> // For phase prompts
+    system: React.RefObject<HTMLTextAreaElement>;
+    user: React.RefObject<HTMLTextAreaElement>;
+    [key: string]: React.RefObject<HTMLTextAreaElement>; // For phase prompts
   }>({
     system: createRef<HTMLTextAreaElement>(),
     user: createRef<HTMLTextAreaElement>(),
-  })
+  });
 
   // Function to ensure ref exists for a given key (mostly for phase prompts now)
   const ensureRef = (key: string) => {
     if (!contentRefs.current[key]) {
-      contentRefs.current[key] = createRef<HTMLTextAreaElement>()
+      contentRefs.current[key] = createRef<HTMLTextAreaElement>();
     }
-    return contentRefs.current[key]
-  }
+    return contentRefs.current[key];
+  };
 
   // Clean up refs when dialog closes or component unmounts might be needed
   // depending on lifecycle, but usually React handles this okay.
@@ -102,47 +138,55 @@ export function AgentRolesConfig({
     contentRefs.current = {
       system: createRef<HTMLTextAreaElement>(),
       user: createRef<HTMLTextAreaElement>(),
-    } // Reset default refs, phase refs created dynamically
-  }
-  
+    }; // Reset default refs, phase refs created dynamically
+  };
+
   // Helper function to toggle visibility for state variables or partials for a specific key
-  const toggleInserterVisibility = (key: string, type: 'state' | 'partials') => {
-    setInserterVisibility(prev => {
+  const toggleInserterVisibility = (
+    key: string,
+    type: "state" | "partials",
+  ) => {
+    setInserterVisibility((prev) => {
       const currentVisibility = prev[key] || { state: false, partials: false }; // Default to hidden
       return {
         ...prev,
         [key]: {
           ...currentVisibility,
-          [type]: !currentVisibility[type] // Toggle the specific type
-        }
+          [type]: !currentVisibility[type], // Toggle the specific type
+        },
       };
     });
   };
-  
+
   // Helper function to check if an inserter/list is visible for a specific key and type
-  const isInserterVisible = (key: string, type: 'state' | 'partials'): boolean => {
+  const isInserterVisible = (
+    key: string,
+    type: "state" | "partials",
+  ): boolean => {
     return inserterVisibility[key]?.[type] ?? false; // Default to hidden
   };
-  
+
   // Helper function to toggle preview mode for a specific prompt key
   const togglePreviewMode = (key: string) => {
-    setPreviewModes(prev => ({ ...prev, [key]: !prev[key] }));
+    setPreviewModes((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-  
+
   // Helper function to parse phase prompts from the role data
-  const parsePhasePrompts = (prompts: Record<string, string>): PhasePrompt[] => {
-    const parsed: PhasePrompt[] = []
-    const phaseKeys = new Set<number>()
+  const parsePhasePrompts = (
+    prompts: Record<string, string>,
+  ): PhasePrompt[] => {
+    const parsed: PhasePrompt[] = [];
+    const phaseKeys = new Set<number>();
 
     // Collect all phase numbers present
     for (const key in prompts) {
-      const sysMatch = key.match(/^system_phase_(\d+)$/)
-      const userMatch = key.match(/^user_phase_(\d+)$/)
+      const sysMatch = key.match(/^system_phase_(\d+)$/);
+      const userMatch = key.match(/^user_phase_(\d+)$/);
       if (sysMatch?.[1]) {
-        phaseKeys.add(parseInt(sysMatch[1], 10))
+        phaseKeys.add(parseInt(sysMatch[1], 10));
       }
       if (userMatch?.[1]) {
-        phaseKeys.add(parseInt(userMatch[1], 10))
+        phaseKeys.add(parseInt(userMatch[1], 10));
       }
     }
 
@@ -152,109 +196,112 @@ export function AgentRolesConfig({
         phase: phaseNum,
         system: prompts[`system_phase_${phaseNum}`] ?? "",
         user: prompts[`user_phase_${phaseNum}`] ?? "",
-      })
-    })
-    return parsed.sort((a, b) => (a.phase as number) - (b.phase as number)) // Sort by phase number
-  }
+      });
+    });
+    return parsed.sort((a, b) => (a.phase as number) - (b.phase as number)); // Sort by phase number
+  };
 
   // Helper function to combine prompts back for saving
   const combinePrompts = (): Record<string, string> => {
-    const combined: Record<string, string> = {}
+    const combined: Record<string, string> = {};
     // Add default prompts
     if (currentRole.prompts.system?.trim()) {
-      combined["system"] = currentRole.prompts.system
+      combined["system"] = currentRole.prompts.system;
     }
     if (currentRole.prompts.user?.trim()) {
-      combined["user"] = currentRole.prompts.user
+      combined["user"] = currentRole.prompts.user;
     }
 
     // Add phase-specific prompts
     phasePrompts.forEach((pp) => {
-      const phaseNum = parseInt(pp.phase as string, 10)
+      const phaseNum = parseInt(pp.phase as string, 10);
       if (!isNaN(phaseNum) && phaseNum > 0) {
         if (pp.system.trim()) {
-          combined[`system_phase_${phaseNum}`] = pp.system
+          combined[`system_phase_${phaseNum}`] = pp.system;
         }
         if (pp.user.trim()) {
-          combined[`user_phase_${phaseNum}`] = pp.user
+          combined[`user_phase_${phaseNum}`] = pp.user;
         }
       }
-    })
-    return combined
-  }
+    });
+    return combined;
+  };
 
   const handleAddRole = () => {
     setCurrentRole({
-      role_id: agentRoles.length > 0
-        ? Math.max(...agentRoles.map(r => r.role_id)) + 1
-        : 1,
+      role_id:
+        agentRoles.length > 0
+          ? Math.max(...agentRoles.map((r) => r.role_id)) + 1
+          : 1,
       name: "",
       llm_type: "ChatOpenAI",
       llm_params: { model_name: "gpt-4o" },
       prompts: { system: "", user: "" },
-    })
-    setPhasePrompts([])
-    clearRefs()
-    setEditingIndex(null)
-    setActiveMainTab("basic")
-    setPreviewModes({}) // Reset preview modes
-    setInserterVisibility({}) // Reset inserter visibility
-    setPreviewModes({}) // Reset preview modes
-    setInserterVisibility({}) // Reset inserter visibility
-    setIsDialogOpen(true)
-  }
+    });
+    setPhasePrompts([]);
+    clearRefs();
+    setEditingIndex(null);
+    setActiveMainTab("basic");
+    setPreviewModes({}); // Reset preview modes
+    setInserterVisibility({}); // Reset inserter visibility
+    setPreviewModes({}); // Reset preview modes
+    setInserterVisibility({}); // Reset inserter visibility
+    setIsDialogOpen(true);
+  };
 
   const handleEditRole = (index: number) => {
-    const roleToEdit = { ...agentRoles[index] }
+    const roleToEdit = { ...agentRoles[index] };
     const defaultPrompts: Record<string, string> = {
       system: roleToEdit.prompts?.system ?? "",
       user: roleToEdit.prompts?.user ?? "",
-    }
+    };
 
     setCurrentRole({
       ...roleToEdit,
-      prompts: defaultPrompts
-    })
-    setPhasePrompts(parsePhasePrompts(roleToEdit.prompts || {}))
-    clearRefs()
-    setEditingIndex(index)
-    setActiveMainTab("basic")
-    setIsDialogOpen(true)
-  }
+      prompts: defaultPrompts,
+    });
+    setPhasePrompts(parsePhasePrompts(roleToEdit.prompts || {}));
+    clearRefs();
+    setEditingIndex(index);
+    setActiveMainTab("basic");
+    setIsDialogOpen(true);
+  };
 
   const handleDeleteRole = (index: number) => {
     // Get the role ID before deleting the role
     const roleIdToDelete = agentRoles[index].role_id;
 
     // Filter out the deleted role
-    const newRoles = [...agentRoles]
-    newRoles.splice(index, 1)
-    onChange(newRoles)
+    const newRoles = [...agentRoles];
+    newRoles.splice(index, 1);
+    onChange(newRoles);
 
     // Filter out agents associated with the deleted role
-    const newAgents = agents.filter(agent => agent.role_id !== roleIdToDelete);
+    const newAgents = agents.filter(
+      (agent) => agent.role_id !== roleIdToDelete,
+    );
     onAgentsChange(newAgents); // Call the callback to update agents in the parent
-  }
+  };
 
   const handleSaveRole = () => {
-    if (!currentRole.name) return
+    if (!currentRole.name) return;
 
     const finalRole: AgentRole = {
       ...currentRole,
       prompts: combinePrompts(), // Combine prompts before saving
-    }
+    };
 
-    let newRoles: AgentRole[]
+    let newRoles: AgentRole[];
     if (editingIndex !== null) {
-      newRoles = [...agentRoles]
-      newRoles[editingIndex] = finalRole
+      newRoles = [...agentRoles];
+      newRoles[editingIndex] = finalRole;
     } else {
-      newRoles = [...agentRoles, finalRole]
+      newRoles = [...agentRoles, finalRole];
     }
 
-    onChange(newRoles)
-    setIsDialogOpen(false)
-  }
+    onChange(newRoles);
+    setIsDialogOpen(false);
+  };
 
   // Handler for default system/user prompt changes
   const handleDefaultPromptChange = (key: "system" | "user", value: string) => {
@@ -264,64 +311,62 @@ export function AgentRolesConfig({
         ...prev.prompts,
         [key]: value,
       },
-    }))
-  }
+    }));
+  };
 
   // Handler for phase-specific prompt changes
   const handlePhasePromptChange = (
     index: number,
     field: keyof PhasePrompt,
-    value: string | number
+    value: string | number,
   ) => {
     setPhasePrompts((prev) => {
-      const updated = [...prev]
-      updated[index] = { ...updated[index], [field]: value }
-      return updated
-    })
-  }
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
 
   const handleAddPhasePrompt = () => {
-    setPhasePrompts((prev) => [...prev, { phase: "", system: "", user: "" }])
-  }
+    setPhasePrompts((prev) => [...prev, { phase: "", system: "", user: "" }]);
+  };
 
   const handleDeletePhasePrompt = (index: number) => {
     // Clean up ref for the deleted phase prompt
-    delete contentRefs.current[`phase_${index}_system`]
-    delete contentRefs.current[`phase_${index}_user`]
-    setPhasePrompts((prev) => prev.filter((_, i) => i !== index))
-  }
-  
+    delete contentRefs.current[`phase_${index}_system`];
+    delete contentRefs.current[`phase_${index}_user`];
+    setPhasePrompts((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Function to insert partial placeholder into textarea
   const handleInsertPartial = (
     textareaRef: React.RefObject<HTMLTextAreaElement>,
     partialName: string,
-    updateFn: (value: string) => void
+    updateFn: (value: string) => void,
   ) => {
-    if (!textareaRef.current) return
-  
-    const textarea = textareaRef.current
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const currentVal = textarea.value
+    if (!textareaRef.current) return;
+
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentVal = textarea.value;
     // Updated Jinja2 include syntax
-    const textToInsert = `{% include "_partials/${partialName}.jinja2" %}`
-  
+    const textToInsert = `{% include "_partials/${partialName}.jinja2" %}`;
+
     const newValue =
-      currentVal.substring(0, start) +
-      textToInsert +
-      currentVal.substring(end)
-  
-    updateFn(newValue)
-  
+      currentVal.substring(0, start) + textToInsert + currentVal.substring(end);
+
+    updateFn(newValue);
+
     // Set cursor position after the inserted text
-    const newCursorPosition = start + textToInsert.length
+    const newCursorPosition = start + textToInsert.length;
     // Use setTimeout to ensure the cursor position is updated after the re-render
     setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(newCursorPosition, newCursorPosition)
-    }, 0)
-  }
-  
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -345,7 +390,9 @@ export function AgentRolesConfig({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex justify-between items-center">
                   <span>{role.name}</span>
-                  <span className="text-sm text-muted-foreground">ID: {role.role_id}</span>
+                  <span className="text-sm text-muted-foreground">
+                    ID: {role.role_id}
+                  </span>
                 </CardTitle>
                 <CardDescription>
                   {role.llm_type} - {role.llm_params.model_name}
@@ -353,14 +400,23 @@ export function AgentRolesConfig({
               </CardHeader>
               <CardContent className="pb-2">
                 <div className="text-sm">
-                  <strong>Prompts:</strong> {Object.keys(role.prompts || {}).length} defined
+                  <strong>Prompts:</strong>{" "}
+                  {Object.keys(role.prompts || {}).length} defined
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end space-x-2">
-                <Button variant="ghost" size="sm" onClick={() => handleDeleteRole(index)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteRole(index)}
+                >
                   <Trash2Icon className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleEditRole(index)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEditRole(index)}
+                >
                   <EditIcon className="h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -372,10 +428,16 @@ export function AgentRolesConfig({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-5xl">
           <DialogHeader>
-            <DialogTitle>{editingIndex !== null ? "Edit Agent Role" : "Add Agent Role"}</DialogTitle>
+            <DialogTitle>
+              {editingIndex !== null ? "Edit Agent Role" : "Add Agent Role"}
+            </DialogTitle>
           </DialogHeader>
 
-          <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="pt-4">
+          <Tabs
+            value={activeMainTab}
+            onValueChange={setActiveMainTab}
+            className="pt-4"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="prompts">Prompts</TabsTrigger>
@@ -389,7 +451,9 @@ export function AgentRolesConfig({
                     <Input
                       id="role-name"
                       value={currentRole.name}
-                      onChange={(e) => setCurrentRole({ ...currentRole, name: e.target.value })}
+                      onChange={(e) =>
+                        setCurrentRole({ ...currentRole, name: e.target.value })
+                      }
                       placeholder="e.g., Prisoner"
                     />
                   </div>
@@ -452,7 +516,8 @@ export function AgentRolesConfig({
                             ...currentRole,
                             llm_params: {
                               ...currentRole.llm_params,
-                              temperature: Number.parseFloat(e.target.value) || 0,
+                              temperature:
+                                Number.parseFloat(e.target.value) || 0,
                             },
                           })
                         }
@@ -485,7 +550,11 @@ export function AgentRolesConfig({
 
             <TabsContent value="prompts">
               <div className="py-4 space-y-2 max-h-[75vh] overflow-y-scroll px-1">
-                <Accordion type="single" defaultValue="default" collapsible={false}>
+                <Accordion
+                  type="single"
+                  defaultValue="default"
+                  collapsible={false}
+                >
                   <div className="flex items-start gap-2 mb-2 w-full">
                     <AccordionItem
                       value="default"
@@ -503,19 +572,29 @@ export function AgentRolesConfig({
                         <div className="grid gap-4">
                           <div className="grid gap-2">
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="prompt-system">System Prompt</Label>
+                              <Label htmlFor="prompt-system">
+                                System Prompt
+                              </Label>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => togglePreviewMode('system')}
-                                title={previewModes['system'] ? "Switch to Edit Mode" : "Switch to Preview Mode"}
+                                onClick={() => togglePreviewMode("system")}
+                                title={
+                                  previewModes["system"]
+                                    ? "Switch to Edit Mode"
+                                    : "Switch to Preview Mode"
+                                }
                                 className="h-7 w-7"
                               >
-                                {previewModes['system'] ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                {previewModes["system"] ? (
+                                  <EyeOffIcon className="h-4 w-4" />
+                                ) : (
+                                  <EyeIcon className="h-4 w-4" />
+                                )}
                               </Button>
                             </div>
                             <div className="space-y-2">
-                              {previewModes['system'] ? (
+                              {previewModes["system"] ? (
                                 <PromptPreview
                                   rawPrompt={currentRole.prompts?.system || ""}
                                   promptPartials={promptPartials}
@@ -527,7 +606,12 @@ export function AgentRolesConfig({
                                     ref={contentRefs.current.system}
                                     id="prompt-system"
                                     value={currentRole.prompts?.system || ""}
-                                    onChange={(e) => handleDefaultPromptChange("system", e.target.value)}
+                                    onChange={(e) =>
+                                      handleDefaultPromptChange(
+                                        "system",
+                                        e.target.value,
+                                      )
+                                    }
                                     rows={5}
                                     placeholder="General system prompt for this role..."
                                     className="min-h-[100px]"
@@ -537,41 +621,64 @@ export function AgentRolesConfig({
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => toggleInserterVisibility('system', 'state')}
+                                      onClick={() =>
+                                        toggleInserterVisibility(
+                                          "system",
+                                          "state",
+                                        )
+                                      }
                                       className="gap-1 text-xs"
                                     >
                                       <VariableIcon className="h-3 w-3" />
-                                      {isInserterVisible('system', 'state') ? 'Hide' : 'Show'} State Vars
+                                      {isInserterVisible("system", "state")
+                                        ? "Hide"
+                                        : "Show"}{" "}
+                                      State Vars
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => toggleInserterVisibility('system', 'partials')}
+                                      onClick={() =>
+                                        toggleInserterVisibility(
+                                          "system",
+                                          "partials",
+                                        )
+                                      }
                                       className="gap-1 text-xs"
                                     >
                                       <ListIcon className="h-3 w-3" />
-                                      {isInserterVisible('system', 'partials') ? 'Hide' : 'Show'} Partials
+                                      {isInserterVisible("system", "partials")
+                                        ? "Hide"
+                                        : "Show"}{" "}
+                                      Partials
                                     </Button>
                                   </div>
                                   {/* Conditionally render StateVariableInserter */}
-                                  {isInserterVisible('system', 'state') && (
+                                  {isInserterVisible("system", "state") && (
                                     <StateVariableInserter
                                       state={stateForInserter} // Use combined state
                                       textareaRef={contentRefs.current.system}
                                       onInsert={(newValue) =>
-                                        handleDefaultPromptChange("system", newValue)
+                                        handleDefaultPromptChange(
+                                          "system",
+                                          newValue,
+                                        )
                                       }
                                     />
                                   )}
                                   {/* Conditionally render PartialsList */}
-                                  {isInserterVisible('system', 'partials') && (
+                                  {isInserterVisible("system", "partials") && (
                                     <PartialsList
                                       promptPartials={promptPartials}
                                       onInsertPartial={(partialName) =>
                                         handleInsertPartial(
                                           contentRefs.current.system,
                                           partialName,
-                                          (val) => handleDefaultPromptChange("system", val)
+                                          (val) =>
+                                            handleDefaultPromptChange(
+                                              "system",
+                                              val,
+                                            ),
                                         )
                                       }
                                     />
@@ -589,15 +696,23 @@ export function AgentRolesConfig({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => togglePreviewMode('user')}
-                                title={previewModes['user'] ? "Switch to Edit Mode" : "Switch to Preview Mode"}
+                                onClick={() => togglePreviewMode("user")}
+                                title={
+                                  previewModes["user"]
+                                    ? "Switch to Edit Mode"
+                                    : "Switch to Preview Mode"
+                                }
                                 className="h-7 w-7"
                               >
-                                {previewModes['user'] ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                {previewModes["user"] ? (
+                                  <EyeOffIcon className="h-4 w-4" />
+                                ) : (
+                                  <EyeIcon className="h-4 w-4" />
+                                )}
                               </Button>
                             </div>
                             <div className="space-y-2">
-                              {previewModes['user'] ? (
+                              {previewModes["user"] ? (
                                 <PromptPreview
                                   rawPrompt={currentRole.prompts?.user || ""}
                                   promptPartials={promptPartials}
@@ -609,7 +724,12 @@ export function AgentRolesConfig({
                                     ref={contentRefs.current.user}
                                     id="prompt-user"
                                     value={currentRole.prompts?.user || ""}
-                                    onChange={(e) => handleDefaultPromptChange("user", e.target.value)}
+                                    onChange={(e) =>
+                                      handleDefaultPromptChange(
+                                        "user",
+                                        e.target.value,
+                                      )
+                                    }
                                     rows={5}
                                     placeholder="General user prompt for this role..."
                                     className="min-h-[100px]"
@@ -619,41 +739,64 @@ export function AgentRolesConfig({
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => toggleInserterVisibility('user', 'state')}
+                                      onClick={() =>
+                                        toggleInserterVisibility(
+                                          "user",
+                                          "state",
+                                        )
+                                      }
                                       className="gap-1 text-xs"
                                     >
                                       <VariableIcon className="h-3 w-3" />
-                                      {isInserterVisible('user', 'state') ? 'Hide' : 'Show'} State Vars
+                                      {isInserterVisible("user", "state")
+                                        ? "Hide"
+                                        : "Show"}{" "}
+                                      State Vars
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => toggleInserterVisibility('user', 'partials')}
+                                      onClick={() =>
+                                        toggleInserterVisibility(
+                                          "user",
+                                          "partials",
+                                        )
+                                      }
                                       className="gap-1 text-xs"
                                     >
                                       <ListIcon className="h-3 w-3" />
-                                      {isInserterVisible('user', 'partials') ? 'Hide' : 'Show'} Partials
+                                      {isInserterVisible("user", "partials")
+                                        ? "Hide"
+                                        : "Show"}{" "}
+                                      Partials
                                     </Button>
                                   </div>
                                   {/* Conditionally render StateVariableInserter */}
-                                  {isInserterVisible('user', 'state') && (
+                                  {isInserterVisible("user", "state") && (
                                     <StateVariableInserter
                                       state={stateForInserter} // Use combined state
                                       textareaRef={contentRefs.current.user}
                                       onInsert={(newValue) =>
-                                        handleDefaultPromptChange("user", newValue)
+                                        handleDefaultPromptChange(
+                                          "user",
+                                          newValue,
+                                        )
                                       }
                                     />
                                   )}
                                   {/* Conditionally render PartialsList */}
-                                  {isInserterVisible('user', 'partials') && (
+                                  {isInserterVisible("user", "partials") && (
                                     <PartialsList
                                       promptPartials={promptPartials}
                                       onInsertPartial={(partialName) =>
                                         handleInsertPartial(
                                           contentRefs.current.user,
                                           partialName,
-                                          (val) => handleDefaultPromptChange("user", val)
+                                          (val) =>
+                                            handleDefaultPromptChange(
+                                              "user",
+                                              val,
+                                            ),
                                         )
                                       }
                                     />
@@ -665,51 +808,77 @@ export function AgentRolesConfig({
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <div className="h-9 px-3 mt-1 flex items-center justify-center" aria-hidden="true">
+                    <div
+                      className="h-9 px-3 mt-1 flex items-center justify-center"
+                      aria-hidden="true"
+                    >
                       <LockIcon className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
 
                   {phasePrompts.map((phasePrompt, index) => (
-                    <div key={index} className="flex items-start gap-2 mb-2 w-full">
+                    <div
+                      key={index}
+                      className="flex items-start gap-2 mb-2 w-full"
+                    >
                       <AccordionItem
                         value={`phase-${index}`}
                         className="flex-1 border-x border-t rounded-t-md data-[state=closed]:border-b data-[state=closed]:rounded-b-md px-4 shadow-none bg-background"
                       >
                         <AccordionTrigger className="text-base py-3 hover:no-underline">
                           <div>
-                            Phase {phasePrompt.phase || 'X'} Prompts
+                            Phase {phasePrompt.phase || "X"} Prompts
                             <p className="text-xs text-muted-foreground font-normal text-left">
-                              Overrides defaults for phase {phasePrompt.phase || '...'}
+                              Overrides defaults for phase{" "}
+                              {phasePrompt.phase || "..."}
                             </p>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-2 pb-4">
                           <div className="grid gap-4">
                             <div className="grid gap-2">
-                              <Label htmlFor={`phase-number-${index}`}>Phase Number</Label>
+                              <Label htmlFor={`phase-number-${index}`}>
+                                Phase Number
+                              </Label>
                               <Input
                                 id={`phase-number-${index}`}
                                 type="number"
                                 min="1"
                                 value={phasePrompt.phase}
-                                onChange={(e) => handlePhasePromptChange(index, "phase", e.target.value)}
+                                onChange={(e) =>
+                                  handlePhasePromptChange(
+                                    index,
+                                    "phase",
+                                    e.target.value,
+                                  )
+                                }
                                 placeholder="e.g., 3"
                               />
                             </div>
                             <div className="grid gap-2">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor={`phase-system-${index}`}>
-                                  System Prompt (Phase {phasePrompt.phase || 'X'})
+                                  System Prompt (Phase{" "}
+                                  {phasePrompt.phase || "X"})
                                 </Label>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => togglePreviewMode(`phase_${index}_system`)}
-                                  title={previewModes[`phase_${index}_system`] ? "Switch to Edit Mode" : "Switch to Preview Mode"}
+                                  onClick={() =>
+                                    togglePreviewMode(`phase_${index}_system`)
+                                  }
+                                  title={
+                                    previewModes[`phase_${index}_system`]
+                                      ? "Switch to Edit Mode"
+                                      : "Switch to Preview Mode"
+                                  }
                                   className="h-7 w-7"
                                 >
-                                  {previewModes[`phase_${index}_system`] ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                  {previewModes[`phase_${index}_system`] ? (
+                                    <EyeOffIcon className="h-4 w-4" />
+                                  ) : (
+                                    <EyeIcon className="h-4 w-4" />
+                                  )}
                                 </Button>
                               </div>
                               <div className="space-y-2">
@@ -729,11 +898,11 @@ export function AgentRolesConfig({
                                         handlePhasePromptChange(
                                           index,
                                           "system",
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       rows={4}
-                                      placeholder={`System prompt specific to phase ${phasePrompt.phase || '...'}`}
+                                      placeholder={`System prompt specific to phase ${phasePrompt.phase || "..."}`}
                                       className="min-h-[80px]"
                                     />
                                     {/* Add Toggle Buttons */}
@@ -741,39 +910,80 @@ export function AgentRolesConfig({
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => toggleInserterVisibility(`phase_${index}_system`, 'state')}
+                                        onClick={() =>
+                                          toggleInserterVisibility(
+                                            `phase_${index}_system`,
+                                            "state",
+                                          )
+                                        }
                                         className="gap-1 text-xs"
                                       >
                                         <VariableIcon className="h-3 w-3" />
-                                        {isInserterVisible(`phase_${index}_system`, 'state') ? 'Hide' : 'Show'} State Vars
+                                        {isInserterVisible(
+                                          `phase_${index}_system`,
+                                          "state",
+                                        )
+                                          ? "Hide"
+                                          : "Show"}{" "}
+                                        State Vars
                                       </Button>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => toggleInserterVisibility(`phase_${index}_system`, 'partials')}
+                                        onClick={() =>
+                                          toggleInserterVisibility(
+                                            `phase_${index}_system`,
+                                            "partials",
+                                          )
+                                        }
                                         className="gap-1 text-xs"
                                       >
                                         <ListIcon className="h-3 w-3" />
-                                        {isInserterVisible(`phase_${index}_system`, 'partials') ? 'Hide' : 'Show'} Partials
+                                        {isInserterVisible(
+                                          `phase_${index}_system`,
+                                          "partials",
+                                        )
+                                          ? "Hide"
+                                          : "Show"}{" "}
+                                        Partials
                                       </Button>
                                     </div>
                                     {/* Conditionally render StateVariableInserter */}
-                                    {isInserterVisible(`phase_${index}_system`, 'state') && (
+                                    {isInserterVisible(
+                                      `phase_${index}_system`,
+                                      "state",
+                                    ) && (
                                       <StateVariableInserter
                                         state={stateForInserter} // Use combined state
-                                        textareaRef={ensureRef(`phase_${index}_system`)}
-                                        onInsert={(newValue) => handlePhasePromptChange(index, "system", newValue)}
+                                        textareaRef={ensureRef(
+                                          `phase_${index}_system`,
+                                        )}
+                                        onInsert={(newValue) =>
+                                          handlePhasePromptChange(
+                                            index,
+                                            "system",
+                                            newValue,
+                                          )
+                                        }
                                       />
                                     )}
                                     {/* Conditionally render PartialsList */}
-                                    {isInserterVisible(`phase_${index}_system`, 'partials') && (
+                                    {isInserterVisible(
+                                      `phase_${index}_system`,
+                                      "partials",
+                                    ) && (
                                       <PartialsList
                                         promptPartials={promptPartials}
                                         onInsertPartial={(partialName) =>
                                           handleInsertPartial(
                                             ensureRef(`phase_${index}_system`),
                                             partialName,
-                                            (val) => handlePhasePromptChange(index, "system", val)
+                                            (val) =>
+                                              handlePhasePromptChange(
+                                                index,
+                                                "system",
+                                                val,
+                                              ),
                                           )
                                         }
                                       />
@@ -781,20 +991,30 @@ export function AgentRolesConfig({
                                   </>
                                 )}
                               </div>
-</div>
+                            </div>
                             <div className="grid gap-2">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor={`phase-user-${index}`}>
-                                  User Prompt (Phase {phasePrompt.phase || 'X'})
+                                  User Prompt (Phase {phasePrompt.phase || "X"})
                                 </Label>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => togglePreviewMode(`phase_${index}_user`)}
-                                  title={previewModes[`phase_${index}_user`] ? "Switch to Edit Mode" : "Switch to Preview Mode"}
+                                  onClick={() =>
+                                    togglePreviewMode(`phase_${index}_user`)
+                                  }
+                                  title={
+                                    previewModes[`phase_${index}_user`]
+                                      ? "Switch to Edit Mode"
+                                      : "Switch to Preview Mode"
+                                  }
                                   className="h-7 w-7"
                                 >
-                                  {previewModes[`phase_${index}_user`] ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                  {previewModes[`phase_${index}_user`] ? (
+                                    <EyeOffIcon className="h-4 w-4" />
+                                  ) : (
+                                    <EyeIcon className="h-4 w-4" />
+                                  )}
                                 </Button>
                               </div>
                               <div className="space-y-2">
@@ -814,11 +1034,11 @@ export function AgentRolesConfig({
                                         handlePhasePromptChange(
                                           index,
                                           "user",
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       rows={4}
-                                      placeholder={`User prompt specific to phase ${phasePrompt.phase || '...'}`}
+                                      placeholder={`User prompt specific to phase ${phasePrompt.phase || "..."}`}
                                       className="min-h-[80px]"
                                     />
                                     {/* Add Toggle Buttons */}
@@ -826,39 +1046,80 @@ export function AgentRolesConfig({
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => toggleInserterVisibility(`phase_${index}_user`, 'state')}
+                                        onClick={() =>
+                                          toggleInserterVisibility(
+                                            `phase_${index}_user`,
+                                            "state",
+                                          )
+                                        }
                                         className="gap-1 text-xs"
                                       >
                                         <VariableIcon className="h-3 w-3" />
-                                        {isInserterVisible(`phase_${index}_user`, 'state') ? 'Hide' : 'Show'} State Vars
+                                        {isInserterVisible(
+                                          `phase_${index}_user`,
+                                          "state",
+                                        )
+                                          ? "Hide"
+                                          : "Show"}{" "}
+                                        State Vars
                                       </Button>
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => toggleInserterVisibility(`phase_${index}_user`, 'partials')}
+                                        onClick={() =>
+                                          toggleInserterVisibility(
+                                            `phase_${index}_user`,
+                                            "partials",
+                                          )
+                                        }
                                         className="gap-1 text-xs"
                                       >
                                         <ListIcon className="h-3 w-3" />
-                                        {isInserterVisible(`phase_${index}_user`, 'partials') ? 'Hide' : 'Show'} Partials
+                                        {isInserterVisible(
+                                          `phase_${index}_user`,
+                                          "partials",
+                                        )
+                                          ? "Hide"
+                                          : "Show"}{" "}
+                                        Partials
                                       </Button>
                                     </div>
                                     {/* Conditionally render StateVariableInserter */}
-                                    {isInserterVisible(`phase_${index}_user`, 'state') && (
+                                    {isInserterVisible(
+                                      `phase_${index}_user`,
+                                      "state",
+                                    ) && (
                                       <StateVariableInserter
                                         state={stateForInserter} // Use combined state
-                                        textareaRef={ensureRef(`phase_${index}_user`)}
-                                        onInsert={(newValue) => handlePhasePromptChange(index, "user", newValue)}
+                                        textareaRef={ensureRef(
+                                          `phase_${index}_user`,
+                                        )}
+                                        onInsert={(newValue) =>
+                                          handlePhasePromptChange(
+                                            index,
+                                            "user",
+                                            newValue,
+                                          )
+                                        }
                                       />
                                     )}
                                     {/* Conditionally render PartialsList */}
-                                    {isInserterVisible(`phase_${index}_user`, 'partials') && (
+                                    {isInserterVisible(
+                                      `phase_${index}_user`,
+                                      "partials",
+                                    ) && (
                                       <PartialsList
                                         promptPartials={promptPartials}
                                         onInsertPartial={(partialName) =>
                                           handleInsertPartial(
                                             ensureRef(`phase_${index}_user`),
                                             partialName,
-                                            (val) => handlePhasePromptChange(index, "user", val)
+                                            (val) =>
+                                              handlePhasePromptChange(
+                                                index,
+                                                "user",
+                                                val,
+                                              ),
                                           )
                                         }
                                       />
@@ -866,7 +1127,7 @@ export function AgentRolesConfig({
                                   </>
                                 )}
                               </div>
-    </div>
+                            </div>
                           </div>
                         </AccordionContent>
                       </AccordionItem>
@@ -875,10 +1136,10 @@ export function AgentRolesConfig({
                         size="sm"
                         className="mt-1 text-destructive hover:bg-destructive/10"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeletePhasePrompt(index)
+                          e.stopPropagation();
+                          handleDeletePhasePrompt(index);
                         }}
-                        aria-label={`Delete Phase ${phasePrompt.phase || 'X'} Prompt`}
+                        aria-label={`Delete Phase ${phasePrompt.phase || "X"} Prompt`}
                       >
                         <Trash2Icon className="h-4 w-4" />
                       </Button>
@@ -897,7 +1158,6 @@ export function AgentRolesConfig({
                     Add Phase-Specific Prompt
                   </Button>
                 </div>
-
               </div>
             </TabsContent>
           </Tabs>
@@ -913,5 +1173,5 @@ export function AgentRolesConfig({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

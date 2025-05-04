@@ -1,19 +1,32 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { PlusIcon, EditIcon, Trash2Icon } from "lucide-react"
-import { useServerConfigs } from "@/hooks/use-server-configs"
-import { ServerConfigForm } from "@/components/server-config-form"
-import type { ServerConfig } from "@/types"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { PlusIcon, EditIcon, Trash2Icon } from "lucide-react";
+import { useServerConfigs } from "@/hooks/use-server-configs";
+import { ServerConfigForm } from "@/components/server-config-form";
+import type { ServerConfig } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 interface ServerManagementModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const createDefaultServerConfig = (): ServerConfig => ({
@@ -23,60 +36,71 @@ const createDefaultServerConfig = (): ServerConfig => ({
   port: 8765,
   path: "wss",
   observabilityProvider: "none",
-})
+});
 
-export function ServerManagementModal({ isOpen, onClose }: ServerManagementModalProps) {
-  const [serverConfigs, , addServerConfig, updateServerConfig, deleteServerConfig] = useServerConfigs()
-  const [editingConfig, setEditingConfig] = useState<ServerConfig | null>(null)
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const { toast } = useToast()
+export function ServerManagementModal({
+  isOpen,
+  onClose,
+}: ServerManagementModalProps) {
+  const [
+    serverConfigs,
+    ,
+    addServerConfig,
+    updateServerConfig,
+    deleteServerConfig,
+  ] = useServerConfigs();
+  const [editingConfig, setEditingConfig] = useState<ServerConfig | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleAddNew = () => {
-    setEditingConfig(createDefaultServerConfig())
-    setIsFormOpen(true)
-  }
+    setEditingConfig(createDefaultServerConfig());
+    setIsFormOpen(true);
+  };
 
   const handleEdit = (config: ServerConfig) => {
-    setEditingConfig({ ...config }) // Create a copy to edit
-    setIsFormOpen(true)
-  }
+    setEditingConfig({ ...config });
+    setIsFormOpen(true);
+  };
 
   const handleDelete = (id: string) => {
-    // Add confirmation dialog here if desired
-    deleteServerConfig(id)
-    toast({ title: "Server configuration deleted." })
-  }
+    deleteServerConfig(id);
+    toast({ title: "Server configuration deleted." });
+  };
 
   const handleSave = (configToSave: ServerConfig) => {
     if (!configToSave.name?.trim()) {
-      toast({ title: "Error", description: "Configuration name cannot be empty.", variant: "destructive" })
-      return
+      toast({
+        title: "Error",
+        description: "Configuration name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    const isUpdating = serverConfigs.some((c) => c.id === configToSave.id)
+    const isUpdating = serverConfigs.some((c) => c.id === configToSave.id);
     if (isUpdating) {
-      updateServerConfig(configToSave)
-      toast({ title: "Server configuration updated." })
+      updateServerConfig(configToSave);
+      toast({ title: "Server configuration updated." });
     } else {
-      addServerConfig(configToSave)
-      toast({ title: "Server configuration added." })
+      addServerConfig(configToSave);
+      toast({ title: "Server configuration added." });
     }
-    setIsFormOpen(false)
-    setEditingConfig(null)
-  }
+    setIsFormOpen(false);
+    setEditingConfig(null);
+  };
 
   const handleFormClose = () => {
-    setIsFormOpen(false)
-    setEditingConfig(null)
-  }
+    setIsFormOpen(false);
+    setEditingConfig(null);
+  };
 
-  // Close form modal if the main modal is closed
   useEffect(() => {
     if (!isOpen) {
-      setIsFormOpen(false)
-      setEditingConfig(null)
+      setIsFormOpen(false);
+      setEditingConfig(null);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   return (
     <>
@@ -88,20 +112,29 @@ export function ServerManagementModal({ isOpen, onClose }: ServerManagementModal
           <ScrollArea className="max-h-[70vh] pr-6">
             <div className="py-4 space-y-4">
               {serverConfigs.length === 0 ? (
-                <p className="text-muted-foreground text-center">No server configurations found.</p>
+                <p className="text-muted-foreground text-center">
+                  No server configurations found.
+                </p>
               ) : (
                 serverConfigs.map((config) => (
                   <Card key={config.id}>
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">{config.name}</CardTitle>
+                          <CardTitle className="text-lg">
+                            {config.name}
+                          </CardTitle>
                           <CardDescription>
                             {config.hostname}:{config.port}/{config.path}
                           </CardDescription>
                         </div>
                         <div className="flex space-x-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(config)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(config)}
+                          >
                             <EditIcon className="h-4 w-4" />
                           </Button>
                           <Button
@@ -135,14 +168,19 @@ export function ServerManagementModal({ isOpen, onClose }: ServerManagementModal
       <Dialog open={isFormOpen} onOpenChange={handleFormClose}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editingConfig?.id && serverConfigs.some(c => c.id === editingConfig.id) ? "Edit Server Configuration" : "Add New Server Configuration"}</DialogTitle>
+            <DialogTitle>
+              {editingConfig?.id &&
+              serverConfigs.some((c) => c.id === editingConfig.id)
+                ? "Edit Server Configuration"
+                : "Add New Server Configuration"}
+            </DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[70vh] pr-6">
             <div className="py-4">
               {editingConfig && (
                 <ServerConfigForm
                   config={editingConfig}
-                  onChange={setEditingConfig} // Update the temporary editing state
+                  onChange={setEditingConfig}
                 />
               )}
             </div>
@@ -151,12 +189,15 @@ export function ServerManagementModal({ isOpen, onClose }: ServerManagementModal
             <Button variant="outline" onClick={handleFormClose}>
               Cancel
             </Button>
-            <Button onClick={() => editingConfig && handleSave(editingConfig)} disabled={!editingConfig?.name?.trim()}>
+            <Button
+              onClick={() => editingConfig && handleSave(editingConfig)}
+              disabled={!editingConfig?.name?.trim()}
+            >
               Save Configuration
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

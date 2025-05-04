@@ -151,7 +151,7 @@
 }
 
 .dark .prompt-partial-invalid {
-   background-color: oklch(var(--destructive) / 0.2);
-   border: 1px solid oklch(var(--destructive) / 0.6);
-   color: oklch(var(--destructive));
+  background-color: oklch(var(--destructive) / 0.2);
+  border: 1px solid oklch(var(--destructive) / 0.6);
+  color: oklch(var(--destructive));
 }

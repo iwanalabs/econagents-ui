@@ -131,8 +131,8 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       activeTab === "meta"
         ? "metaInformation"
         : activeTab === "private"
-        ? "privateInformation"
-        : "publicInformation";
+          ? "privateInformation"
+          : "publicInformation";
 
     // Ensure the array exists before trying to modify it
     const currentFields = state[fieldTypeKey] || []; // Use the correct key
@@ -168,11 +168,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       activeTab === "meta"
         ? "metaInformation"
         : activeTab === "private"
-        ? "privateInformation"
-        : "publicInformation";
+          ? "privateInformation"
+          : "publicInformation";
 
     // Work on a copy to modify before saving
-    let fieldToSave: StateField = { ...currentField };
+    const fieldToSave: StateField = { ...currentField };
 
     // Automatically set/unset defaultFactory based on type
     if (fieldToSave.type === "list" || fieldToSave.type === "dict") {
@@ -189,7 +189,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       editingIndex === null
     ) {
       console.error(
-        `Cannot add a meta field with the reserved name: ${fieldToSave.name}`
+        `Cannot add a meta field with the reserved name: ${fieldToSave.name}`,
       );
       // Optionally show a toast notification here
       // toast({ title: "Error", description: `Cannot use reserved meta field name: ${fieldToSave.name}`, variant: "destructive" });
@@ -211,7 +211,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
         // For now, let's just update the default value if changed.
         // More robust logic might be needed depending on requirements.
         console.warn(
-          `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`
+          `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`,
         );
         // Example: Only allow updating default value
         // newFields = [...currentFields];
@@ -350,7 +350,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     {field.excludeFromMapping ? "N" : "Y"}
                   </>
                 ) : (
-                  // Render placeholder content to maintain layout even when hidden
                   <>&nbsp;</>
                 )}
               </span>

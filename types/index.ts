@@ -1,2 +1,2 @@
-export * from "./project"
-export type { PromptPartial, ServerConfig } from "./project" // Add ServerConfig export
+export * from "./project";
+export type { PromptPartial, ServerConfig } from "./project"; // Add ServerConfig export

@@ -11,34 +11,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ServerConfig } from "@/types"; // Import ServerConfig type
+import type { ServerConfig } from "@/types";
 
 interface ServerConfigFormProps {
-  config: ServerConfig; // Use ServerConfig type
-  onChange: (config: ServerConfig) => void; // Use ServerConfig type
+  config: ServerConfig;
+  onChange: (config: ServerConfig) => void;
 }
 
-// Rename component and update props
 export function ServerConfigForm({
   config: initialConfig,
   onChange,
 }: ServerConfigFormProps) {
   const [config, setConfig] = useState<ServerConfig>(initialConfig);
 
-  // Update local state when the initialConfig prop changes (e.g., when selecting a different config to edit)
   useEffect(() => {
     setConfig(initialConfig);
   }, [initialConfig]);
 
   const handleChange = (
     field: keyof ServerConfig,
-    value: string | number | null
+    value: string | number | null,
   ) => {
-    // Handle empty string for optional fields -> null
     const processedValue = value === "" ? null : value;
     const updatedConfig = { ...config, [field]: processedValue };
     setConfig(updatedConfig);
-    onChange(updatedConfig); // Propagate changes up immediately
+    onChange(updatedConfig);
   };
 
   const handleNumberChange = (field: keyof ServerConfig, value: string) => {
@@ -49,7 +46,6 @@ export function ServerConfigForm({
   };
 
   return (
-    // Remove outer div and title, as this will be part of a modal/page
     <Card>
       <CardHeader>
         <CardTitle>Server Details</CardTitle>{" "}
@@ -62,7 +58,7 @@ export function ServerConfigForm({
             <Label htmlFor="server-name">Configuration Name *</Label>
             <Input
               id="server-name"
-              value={config.name || ""} // Use config instead of runner
+              value={config.name || ""}
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="e.g., Local Dev Server"
               required
@@ -70,45 +66,24 @@ export function ServerConfigForm({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Remove the Runner Type Select field */}
-            {/*
-            <div className="grid gap-2">
-              <Label htmlFor="server-type">Runner Type</Label>
-              <Select
-                value={config.type || "TurnBasedGameRunner"} // Use config instead of runner
-                onValueChange={(value) => handleChange("type", value)}
-              >
-                <SelectTrigger id="server-type">
-                  <SelectValue placeholder="Select runner type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TurnBasedGameRunner">
-                    Turn-Based Game Runner
-                  </SelectItem>
-                  {/* Add other runner types if needed * /}
-                </SelectContent>
-              </Select>
-            </div>
-            */}
             <div className="grid gap-2">
               <Label htmlFor="hostname">Hostname</Label>
               <Input
                 id="hostname"
-                value={config.hostname || ""} // Use config instead of runner
+                value={config.hostname || ""}
                 onChange={(e) => handleChange("hostname", e.target.value)}
                 placeholder="localhost"
               />
             </div>
           </div>
 
-          {/* Adjust grid layout - Hostname now takes full width or stays half? Let's keep it half for now */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="port">Port</Label>
               <Input
                 id="port"
                 type="number"
-                value={config.port?.toString() || ""} // Use config instead of runner
+                value={config.port?.toString() || ""}
                 onChange={(e) => handleNumberChange("port", e.target.value)}
                 placeholder="8765"
                 min="0"
@@ -118,7 +93,7 @@ export function ServerConfigForm({
               <Label htmlFor="path">Path</Label>
               <Input
                 id="path"
-                value={config.path || ""} // Use config instead of runner
+                value={config.path || ""}
                 onChange={(e) => handleChange("path", e.target.value)}
                 placeholder="wss"
               />
@@ -126,20 +101,6 @@ export function ServerConfigForm({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Remove the Game ID field */}
-            {/*
-            <div className="grid gap-2">
-              <Label htmlFor="game-id">Game ID (Optional)</Label>
-              <Input
-                id="game-id"
-                type="number"
-                value={config.game_id?.toString() ?? ""} // Use config instead of runner, handle null/undefined
-                onChange={(e) => handleNumberChange("game_id", e.target.value)}
-                placeholder="Leave blank if not needed"
-                min="0"
-              />
-            </div>
-            */}
             <div className="grid gap-2">
               <Label htmlFor="logs-dir">Logs Directory (Optional)</Label>
               <Input
@@ -159,7 +120,7 @@ export function ServerConfigForm({
             <div className="grid gap-2">
               <Label htmlFor="log-level">Log Level (Optional)</Label>
               <Select
-                value={config.logLevel || "none"} // Use config instead of runner
+                value={config.logLevel || "none"}
                 onValueChange={(value) => handleChange("log_level", value)}
               >
                 <SelectTrigger id="log-level">
@@ -180,7 +141,7 @@ export function ServerConfigForm({
                 Observability Provider (Optional)
               </Label>
               <Select
-                value={config.observabilityProvider || "none"} // Use config instead of runner
+                value={config.observabilityProvider || "none"}
                 onValueChange={(value) =>
                   handleChange("observability_provider", value)
                 }
@@ -191,7 +152,6 @@ export function ServerConfigForm({
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   <SelectItem value="langsmith">LangSmith</SelectItem>
-                  {/* Add other providers if needed */}
                 </SelectContent>
               </Select>
             </div>
@@ -204,7 +164,7 @@ export function ServerConfigForm({
               </Label>
               <Input
                 id="phase-transition-event"
-                value={config.phaseTransitionEvent || ""} // Use config instead of runner
+                value={config.phaseTransitionEvent || ""}
                 onChange={(e) =>
                   handleChange("phase_transition_event", e.target.value)
                 }
@@ -217,7 +177,7 @@ export function ServerConfigForm({
               </Label>
               <Input
                 id="phase-identifier-key"
-                value={config.phaseIdentifierKey || ""} // Use config instead of runner
+                value={config.phaseIdentifierKey || ""}
                 onChange={(e) =>
                   handleChange("phase_identifier_key", e.target.value)
                 }
