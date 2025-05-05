@@ -5,14 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-// Add UploadIcon
-import {
-  PlusIcon,
-  SearchIcon,
-  ServerIcon,
-  XIcon,
-  UploadIcon,
-} from "lucide-react";
+import { PlusIcon, SearchIcon, ServerIcon, XIcon, Import } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +20,6 @@ import { CreateProjectModal } from "@/components/create-project-modal";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Project } from "@/types/project";
 import { ServerManagementModal } from "@/components/server-management-modal";
-// Import the new ImportProjectModal
 import { ImportProjectModal } from "@/components/import-project-modal";
 
 export function ProjectDashboard() {
@@ -35,7 +27,6 @@ export function ProjectDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
-  // Add state for import modal
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
@@ -57,7 +48,7 @@ export function ProjectDashboard() {
   const handleImportProject = (importedProject: Project) => {
     const newProjects = [...projects, importedProject];
     setProjects(newProjects);
-    setIsImportModalOpen(false); // Close the import modal
+    setIsImportModalOpen(false);
   };
 
   const handleDeleteProject = (id: string) => {
@@ -104,14 +95,13 @@ export function ProjectDashboard() {
               <ServerIcon className="h-4 w-4" />
               Manage Servers
             </Button>
-            {/* Add Import Project Button */}
             <Button
               variant="outline"
               size="sm"
               className="gap-2"
               onClick={() => setIsImportModalOpen(true)}
             >
-              <UploadIcon className="h-4 w-4" />
+              <Import className="h-4 w-4" />
               Import Project
             </Button>
           </div>
@@ -183,15 +173,13 @@ export function ProjectDashboard() {
         onClose={() => setIsServerModalOpen(false)}
       />
 
-      {/* Add the Import Project Modal */}
       <ImportProjectModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportProject={handleImportProject}
-        mode="create" // Explicitly set mode for dashboard usage
+        mode="create"
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={isConfirmDeleteDialogOpen}
         onOpenChange={setIsConfirmDeleteDialogOpen}
