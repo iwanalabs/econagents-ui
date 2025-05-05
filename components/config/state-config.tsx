@@ -580,7 +580,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                   })
                 }
               />
-              <Label htmlFor="field-optional">Optional Field</Label>
+              <Label htmlFor="field-optional">Optional field</Label>
             </div>
           </div>
           <DialogFooter>

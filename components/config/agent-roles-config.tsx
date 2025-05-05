@@ -266,9 +266,7 @@ export function AgentRolesConfig({
     onChange(newRoles);
 
     // Filter out agents associated with the deleted role
-    const newAgents = agents.filter(
-      (agent) => agent.roleId !== roleIdToDelete
-    );
+    const newAgents = agents.filter((agent) => agent.roleId !== roleIdToDelete);
     onAgentsChange(newAgents); // Call the callback to update agents in the parent
   };
 
