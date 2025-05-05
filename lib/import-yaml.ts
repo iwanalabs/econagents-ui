@@ -31,7 +31,6 @@ function parsePrompts(
   return prompts;
 }
 
-// Helper to map YAML state field keys to TS keys
 function mapStateField(yamlField: Record<string, any>): StateField {
   return {
     name: yamlField.name,
@@ -63,7 +62,6 @@ export function importFromYaml(
 
   // Map Agent Roles
   const agentRoles: AgentRole[] = (doc.agent_roles || []).map((role: any) => {
-    // Extract known params and the rest
     const { model_name, temperature, top_p, ...otherParams } =
       role.llm_params || {};
 

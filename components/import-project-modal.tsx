@@ -22,7 +22,7 @@ import {
 import { useServerConfigs } from "@/hooks/use-server-configs";
 import { useToast } from "@/hooks/use-toast";
 import { importFromYaml } from "@/lib/import-yaml";
-import type { Project, ServerConfig } from "@/types";
+import type { Project } from "@/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -137,9 +137,10 @@ export function ImportProjectModal({
       const data = importFromYaml(content, serverId);
       setParsedProjectData(data);
       setError(null); // Clear previous errors
-    } catch (err: any) {
+    } catch (err) {
       console.error("YAML Parsing Error:", err);
-      setError(`YAML Parsing Error: ${err.message}`);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during parsing.';
+      setError(`YAML Parsing Error: ${errorMessage}`);
       setParsedProjectData(null);
     }
   };

@@ -114,8 +114,8 @@ const validateDefaultValue = (type: string, value: string): string | null => {
       ) {
         return 'Default value must be a valid JSON object (e.g., {"key": "value"}).';
       }
-    } catch (e) {
-      return "Invalid JSON format for default value.";
+    } catch (error) {
+      return "Invalid JSON format for default value. " + error;
     }
   }
   // No need to validate boolean here anymore as Select handles it
@@ -205,7 +205,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     // Work on a copy to modify before saving
     const fieldToSave: StateField = { ...currentField };
 
-    let finalDefaultValue: any = fieldToSave.default; // Keep original type for boolean
+    let finalDefaultValue: any = fieldToSave.default;
     const isNullOrUndefined =
       finalDefaultValue === null || finalDefaultValue === undefined;
     const isEmptyString =

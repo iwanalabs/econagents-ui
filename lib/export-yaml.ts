@@ -256,8 +256,8 @@ export async function exportToYaml(
       await writable.write(yaml);
       await writable.close();
       return;
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
         console.log("User cancelled the save dialog.");
       } else {
         console.error("Error saving file:", err);

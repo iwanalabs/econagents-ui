@@ -81,7 +81,7 @@ export function ProjectDashboard() {
   };
 
   const handleOpenProject = (id: string) => {
-    router.push(`/projects/${id}`);
+    router.push(`/project?id=${id}`);
   };
 
   return (
