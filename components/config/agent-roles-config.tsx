@@ -51,7 +51,6 @@ import { StateVariableInserter } from "@/components/state-variable-inserter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartialsList } from "@/components/partials-list";
 import { PromptPreview } from "@/components/prompt-preview";
-import { defaultMetaFields } from "./state-config";
 
 interface AgentRolesConfigProps {
   agentRoles: AgentRole[];
@@ -96,18 +95,7 @@ export function AgentRolesConfig({
     Record<string, { state: boolean; partials: boolean }>
   >({});
 
-  const stateForInserter: State = {
-    ...state,
-    metaInformation: [
-      ...defaultMetaFields,
-      ...(state.metaInformation || []).filter(
-        (field) =>
-          !defaultMetaFields.some(
-            (defaultField) => defaultField.name === field.name
-          )
-      ),
-    ],
-  };
+  const stateForInserter: State = state;
 
   const contentRefs = useRef<{
     system: React.RefObject<HTMLTextAreaElement | null>;

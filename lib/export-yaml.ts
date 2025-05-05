@@ -2,8 +2,6 @@ import type { Project } from "@/types/project";
 // Import ServerConfig type
 import type { ServerConfig } from "@/types";
 import type { StateField } from "@/types/project";
-// Import defaultMetaFields
-import { defaultMetaFields } from "@/components/config/state-config";
 
 // Helper function to format multiline strings for YAML
 function formatYamlMultilineString(str: string, indentLevel: number): string {
@@ -171,17 +169,14 @@ export async function exportToYaml(
     return fieldYaml;
   };
 
-  if (project.state.metaInformation || defaultMetaFields.length > 0) {
+  // Meta information is now directly part of the project state
+  if (
+    project.state.metaInformation &&
+    project.state.metaInformation.length > 0
+  ) {
     yaml += "  meta_information:\n";
-    const customMetaFields = project.state.metaInformation || [];
-    const defaultMetaFieldNames = new Set(defaultMetaFields.map((f) => f.name));
-    const combinedMetaFields = [
-      ...defaultMetaFields,
-      ...customMetaFields.filter(
-        (field) => !defaultMetaFieldNames.has(field.name)
-      ),
-    ];
-    yaml += formatStateFields(combinedMetaFields, "    ");
+    // No need to merge defaults here, just format what's in the state
+    yaml += formatStateFields(project.state.metaInformation, "    ");
   }
 
   if (

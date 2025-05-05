@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { defaultMetaFields } from "@/components/config/state-config";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ export function CreateProjectModal({
       agentRoles: [],
       agents: [],
       state: {
-        metaInformation: [],
+        metaInformation: [...defaultMetaFields],
         privateInformation: [],
         publicInformation: [],
       },

@@ -30,59 +30,53 @@ import {
   Link2,
   Variable,
 } from "lucide-react";
-import type { State, StateField } from "@/types/project";
+import type { State, StateField, StateFieldType } from "@/types/project";
 
 interface StateConfigProps {
   state: State;
   onChange: (state: State) => void;
 }
 
-export const defaultMetaFields: ReadonlyArray<StateField> = [
+export const defaultMetaFields: StateField[] = [
   {
     name: "game_id",
     type: "int",
     default: 0,
-    eventKey: "game_id",
-    excludeFromMapping: false,
-    optional: false, // Add optional flag
+    excludeFromMapping: true,
+    optional: false,
   },
   {
     name: "player_name",
     type: "str",
     default: null,
-    eventKey: "player_name",
     excludeFromMapping: false,
-    optional: true, // Add optional flag (can be null)
+    optional: true,
   },
   {
     name: "player_number",
     type: "int",
     default: null,
-    eventKey: "player_number",
     excludeFromMapping: false,
-    optional: true, // Add optional flag (can be null)
+    optional: true,
   },
   {
     name: "players",
     type: "list",
     defaultFactory: "list",
-    eventKey: "players",
     excludeFromMapping: false,
-    optional: false, // Add optional flag
+    optional: false,
   },
   {
     name: "phase",
     type: "int",
     default: 0,
-    eventKey: "phase",
     excludeFromMapping: false,
-    optional: false, // Add optional flag
+    optional: false,
   },
 ];
 
 const defaultMetaFieldNames = new Set(defaultMetaFields.map((f) => f.name));
 
-// Define a mapping from field type to Tailwind CSS color classes
 const typeColorMapping: Record<string, string> = {
   str: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   int: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
@@ -96,7 +90,6 @@ const typeColorMapping: Record<string, string> = {
 const defaultTypeColor =
   "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"; // Fallback color
 
-// Helper function to validate default value for list/dict
 const validateDefaultValue = (type: string, value: string): string | null => {
   if (type === "MarketState") {
     return null;
@@ -138,7 +131,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     type: "str",
     default: "",
   });
-  // Add state for validation error
   const [defaultValidationError, setDefaultValidationError] = useState<
     string | null
   >(null);
@@ -151,20 +143,14 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     });
     setEditingIndex(null);
     setIsDialogOpen(true);
-    setDefaultValidationError(null); // Reset validation error
+    setDefaultValidationError(null);
   };
 
   const handleEditField = (field: StateField, index: number) => {
-    // Prevent editing default meta fields
-    if (activeTab === "meta" && defaultMetaFieldNames.has(field.name)) {
-      // Optionally show a toast or message here
-      console.warn(`Cannot edit default meta field: ${field.name}`);
-      return;
-    }
     setCurrentField({ ...field });
     setEditingIndex(index);
     setIsDialogOpen(true);
-    setDefaultValidationError(null); // Reset validation error
+    setDefaultValidationError(null);
   };
 
   const handleDeleteField = (index: number) => {
@@ -219,7 +205,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     // Work on a copy to modify before saving
     const fieldToSave: StateField = { ...currentField };
 
-    // --- Start Validation ---
     let finalDefaultValue: any = fieldToSave.default; // Keep original type for boolean
     const isNullOrUndefined =
       finalDefaultValue === null || finalDefaultValue === undefined;
@@ -240,7 +225,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       setDefaultValidationError(
         "Default value is required for non-optional fields."
       );
-      return; // Prevent saving
+      return;
     }
 
     // Validate list/dict default values if provided as a non-empty string
@@ -346,13 +331,15 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     if (
       fieldTypeKey === "metaInformation" &&
       defaultMetaFieldNames.has(fieldToSave.name) &&
-      editingIndex === null
+      editingIndex === null // Only check when adding a new field
     ) {
       console.error(
         `Cannot add a meta field with the reserved name: ${fieldToSave.name}`
       );
       // Optionally show a toast notification here
-      // toast({ title: "Error", description: `Cannot use reserved meta field name: ${fieldToSave.name}`, variant: "destructive" });
+      setDefaultValidationError(
+        `Cannot use reserved meta field name: ${fieldToSave.name}`
+      );
       return;
     }
 
@@ -361,32 +348,22 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     let newFields: StateField[];
 
     if (editingIndex !== null) {
-      // Ensure we don't try to edit a default meta field's core properties if somehow opened
       const originalField = currentFields[editingIndex];
       if (
         fieldTypeKey === "metaInformation" &&
         defaultMetaFieldNames.has(originalField.name)
       ) {
-        // Allow editing only 'default' for default meta fields? Or block all edits?
-        // For now, let's just update the default value if changed.
-        // More robust logic might be needed depending on requirements.
         console.warn(
           `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`
         );
-        // Example: Only allow updating default value
-        // newFields = [...currentFields];
-        // newFields[editingIndex] = { ...originalField, default: fieldToSave.default };
-        // Let's stick to the original plan: block editing default fields entirely via handleEditField.
-        // If somehow the dialog opens, this save should ideally not proceed or only update allowed fields.
-        // Reverting to just updating the field as is, relying on handleEditField to prevent opening the dialog.
         newFields = [...currentFields];
-        newFields[editingIndex] = fieldToSave; // Use the modified field
+        newFields[editingIndex] = fieldToSave;
       } else {
         newFields = [...currentFields];
-        newFields[editingIndex] = fieldToSave; // Use the modified field
+        newFields[editingIndex] = fieldToSave;
       }
     } else {
-      newFields = [...currentFields, fieldToSave]; // Use the modified field
+      newFields = [...currentFields, fieldToSave];
     }
 
     onChange({
@@ -398,15 +375,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
   };
 
   const renderFields = (fields: StateField[], isMetaTab: boolean) => {
-    // Combine default and custom fields for the meta tab
-    const displayFields = isMetaTab
-      ? [
-          ...defaultMetaFields,
-          ...fields.filter((f) => !defaultMetaFieldNames.has(f.name)),
-        ]
-      : fields;
+    // Directly use the fields passed in. Default fields are now part of the project state.
+    const displayFields = fields;
 
-    if (displayFields.length === 0) {
+    if (!displayFields || displayFields.length === 0) {
+      // Check if displayFields is null or empty
       return (
         <Card className="border-dashed">
           <CardContent className="pt-6 text-center text-muted-foreground">
@@ -419,11 +392,11 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     return (
       <div className="space-y-2">
         {displayFields.map((field, index) => {
+          // Check if the current field is one of the default ones by name
           const isDefault = isMetaTab && defaultMetaFieldNames.has(field.name);
-          const originalIndex =
-            isMetaTab && !isDefault
-              ? fields.findIndex((f) => f.name === field.name)
-              : index;
+          // The index passed to map is the correct index in the current `displayFields` array.
+          // No need for complex index calculation anymore.
+          const originalIndex = index;
 
           return (
             <div
@@ -495,7 +468,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     <span className="truncate">{field.eventKey || "None"}</span>
                   </>
                 ) : (
-                  // Render placeholder content to maintain layout even when hidden
                   <>&nbsp;</>
                 )}
               </span>
@@ -544,7 +516,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                   size="sm"
                   className="h-7 w-7 p-0"
                   onClick={() => handleEditField(field, originalIndex)}
-                  disabled={isDefault}
                   aria-label={
                     isDefault
                       ? `Cannot edit default field ${field.name}`
@@ -602,174 +573,202 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="field-name">Field Name</Label>
-              <Input
-                id="field-name"
-                value={currentField.name}
-                onChange={(e) =>
-                  setCurrentField({ ...currentField, name: e.target.value })
-                }
-                placeholder="e.g., game_id"
-              />
-              {activeTab === "meta" &&
-                defaultMetaFieldNames.has(currentField.name) &&
-                editingIndex === null && (
-                  <p className="text-xs text-destructive mt-1">
-                    Cannot use a reserved meta field name.
-                  </p>
-                )}
-            </div>
+            {/* Determine if the field being edited is a default one */}
+            {(() => {
+              const isEditingDefault =
+                editingIndex !== null &&
+                activeTab === "meta" &&
+                defaultMetaFieldNames.has(
+                  (state.metaInformation || [])[editingIndex]?.name
+                );
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="field-type">Type</Label>
-                <Select
-                  value={currentField.type}
-                  onValueChange={(value) =>
-                    setCurrentField({ ...currentField, type: value })
-                  }
-                >
-                  <SelectTrigger id="field-type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="str">String</SelectItem>
-                    <SelectItem value="int">Integer</SelectItem>
-                    <SelectItem value="float">Float</SelectItem>
-                    <SelectItem value="bool">Boolean</SelectItem>
-                    <SelectItem value="list">List</SelectItem>
-                    <SelectItem value="dict">Dictionary</SelectItem>
-                    <SelectItem value="MarketState">MarketState</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              return (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="field-name">Field Name</Label>
+                    <Input
+                      id="field-name"
+                      value={currentField.name}
+                      onChange={(e) =>
+                        setCurrentField({
+                          ...currentField,
+                          name: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., game_id"
+                      // Disable if editing a default field
+                      disabled={isEditingDefault}
+                    />
+                    {activeTab === "meta" &&
+                      defaultMetaFieldNames.has(currentField.name) &&
+                      editingIndex === null && (
+                        <p className="text-xs text-destructive mt-1">
+                          Cannot use a reserved meta field name.
+                        </p>
+                      )}
+                  </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="field-default">Default Value</Label>
-                {currentField.type === "bool" ? (
-                  <Select
-                    value={
-                      currentField.default === true
-                        ? "true"
-                        : currentField.default === false
-                          ? "false"
-                          : "" // Represent null/undefined as empty string for the Select placeholder
-                    }
-                    onValueChange={(value) => {
-                      setCurrentField({
-                        ...currentField,
-                        default:
-                          value === "true"
-                            ? true
-                            : value === "false"
-                              ? false
-                              : null, // Store actual boolean or null
-                      });
-                      // Boolean select doesn't need text validation
-                      setDefaultValidationError(null);
-                    }}
-                  >
-                    <SelectTrigger id="field-default">
-                      <SelectValue placeholder="Select default (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : // Hide default input for MarketState
-                currentField.type === "MarketState" ? (
-                  <Input
-                    id="field-default"
-                    value="Not Applicable"
-                    disabled
-                    className="text-muted-foreground italic"
-                  />
-                ) : (
-                  // Existing Input for other types
-                  <Input
-                    id="field-default"
-                    value={currentField.default?.toString() || ""}
-                    onChange={(e) => {
-                      const newValue = e.target.value;
-                      // Validate immediately on change for non-boolean types
-                      const validationError = validateDefaultValue(
-                        currentField.type,
-                        newValue
-                      );
-                      setDefaultValidationError(validationError);
-                      // Update the field state
-                      setCurrentField({
-                        ...currentField,
-                        default: newValue,
-                      });
-                    }}
-                    placeholder={
-                      currentField.type === "list" ||
-                      currentField.type === "dict"
-                        ? `e.g., ${currentField.type === "list" ? "[1, 2, 3]" : "{'key': 'value'}"}`
-                        : "e.g., 0"
-                    }
-                  />
-                )}
-                {/* Display validation error */}
-                {defaultValidationError &&
-                  currentField.type !== "MarketState" && (
-                    <p className="text-xs text-destructive mt-1">
-                      {defaultValidationError}
-                    </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="field-type">Type</Label>
+                      <Select
+                        value={currentField.type}
+                        onValueChange={(value) =>
+                          setCurrentField({
+                            ...currentField,
+                            type: value as StateFieldType,
+                          })
+                        }
+                        // Disable if editing a default field
+                        disabled={isEditingDefault}
+                      >
+                        <SelectTrigger id="field-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="str">String</SelectItem>
+                          <SelectItem value="int">Integer</SelectItem>
+                          <SelectItem value="float">Float</SelectItem>
+                          <SelectItem value="bool">Boolean</SelectItem>
+                          <SelectItem value="list">List</SelectItem>
+                          <SelectItem value="dict">Dictionary</SelectItem>
+                          <SelectItem value="MarketState">
+                            MarketState
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="field-default">Default Value</Label>
+                      {currentField.type === "bool" ? (
+                        <Select
+                          value={
+                            currentField.default === true
+                              ? "true"
+                              : currentField.default === false
+                                ? "false"
+                                : "" // Represent null/undefined as empty string for the Select placeholder
+                          }
+                          onValueChange={(value) => {
+                            setCurrentField({
+                              ...currentField,
+                              default:
+                                value === "true"
+                                  ? true
+                                  : value === "false"
+                                    ? false
+                                    : null, // Store actual boolean or null
+                            });
+                            // Boolean select doesn't need text validation
+                            setDefaultValidationError(null);
+                          }}
+                        >
+                          <SelectTrigger id="field-default">
+                            <SelectValue placeholder="Select default (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">True</SelectItem>
+                            <SelectItem value="false">False</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : // Hide default input for MarketState
+                      currentField.type === "MarketState" ? (
+                        <Input
+                          id="field-default"
+                          value="Not Applicable"
+                          disabled
+                          className="text-muted-foreground italic"
+                        />
+                      ) : (
+                        // Existing Input for other types
+                        <Input
+                          id="field-default"
+                          value={currentField.default?.toString() || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            // Validate immediately on change for non-boolean types
+                            const validationError = validateDefaultValue(
+                              currentField.type,
+                              newValue
+                            );
+                            setDefaultValidationError(validationError);
+                            // Update the field state
+                            setCurrentField({
+                              ...currentField,
+                              default: newValue,
+                            });
+                          }}
+                          placeholder={
+                            currentField.type === "list" ||
+                            currentField.type === "dict"
+                              ? `e.g., ${currentField.type === "list" ? "[1, 2, 3]" : "{'key': 'value'}"}`
+                              : "e.g., 0"
+                          }
+                        />
+                      )}
+                      {/* Display validation error */}
+                      {defaultValidationError &&
+                        currentField.type !== "MarketState" && (
+                          <p className="text-xs text-destructive mt-1">
+                            {defaultValidationError}
+                          </p>
+                        )}
+                    </div>
+                  </div>
+
+                  {activeTab === "meta" && (
+                    <>
+                      <div className="grid gap-2">
+                        <Label htmlFor="event-key">Event Key</Label>
+                        <Input
+                          id="event-key"
+                          value={currentField.eventKey || ""}
+                          onChange={(e) =>
+                            setCurrentField({
+                              ...currentField,
+                              eventKey: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., round"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="exclude-mapping"
+                          checked={currentField.excludeFromMapping || false}
+                          onCheckedChange={(checked) =>
+                            setCurrentField({
+                              ...currentField,
+                              excludeFromMapping: checked === true,
+                            })
+                          }
+                        />
+                        <Label htmlFor="exclude-mapping">
+                          Exclude from mapping?
+                        </Label>
+                      </div>
+                    </>
                   )}
-              </div>
-            </div>
 
-            {activeTab === "meta" && (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="event-key">Event Key</Label>
-                  <Input
-                    id="event-key"
-                    value={currentField.eventKey || ""}
-                    onChange={(e) =>
-                      setCurrentField({
-                        ...currentField,
-                        eventKey: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., round"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="exclude-mapping"
-                    checked={currentField.excludeFromMapping || false}
-                    onCheckedChange={(checked) =>
-                      setCurrentField({
-                        ...currentField,
-                        excludeFromMapping: checked === true,
-                      })
-                    }
-                  />
-                  <Label htmlFor="exclude-mapping">Exclude from mapping</Label>
-                </div>
-              </>
-            )}
-
-            {/* Add Optional Checkbox */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="field-optional"
-                checked={currentField.optional || false}
-                onCheckedChange={(checked) =>
-                  setCurrentField({
-                    ...currentField,
-                    optional: checked === true,
-                  })
-                }
-              />
-              <Label htmlFor="field-optional">Optional field</Label>
-            </div>
+                  {/* Add Optional Checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="field-optional"
+                      checked={currentField.optional || false}
+                      onCheckedChange={(checked) =>
+                        setCurrentField({
+                          ...currentField,
+                          optional: checked === true,
+                        })
+                      }
+                    />
+                    <Label htmlFor="field-optional">Can be null?</Label>
+                  </div>
+                </>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -782,7 +781,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 (activeTab === "meta" &&
                   defaultMetaFieldNames.has(currentField.name) &&
                   editingIndex === null) ||
-                !!defaultValidationError // Disable if validation error exists
+                !!defaultValidationError
               }
             >
               Save

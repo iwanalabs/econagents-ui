@@ -29,10 +29,7 @@ import {
 } from "@/components/ui/accordion";
 import type { PromptPartial, State } from "@/types";
 import { StateVariableInserter } from "@/components/state-variable-inserter";
-// Import PromptPreview
 import { PromptPreview } from "@/components/prompt-preview";
-// Import defaultMetaFields
-import { defaultMetaFields } from "./state-config";
 
 interface PromptPartialsConfigProps {
   promptPartials: PromptPartial[];
@@ -61,18 +58,8 @@ export function PromptPartialsConfig({
   });
 
   // Create a combined state object for the variable inserter
-  const stateForInserter: State = {
-    ...state,
-    metaInformation: [
-      ...defaultMetaFields,
-      ...(state.metaInformation || []).filter(
-        (field) =>
-          !defaultMetaFields.some(
-            (defaultField) => defaultField.name === field.name,
-          ),
-      ),
-    ],
-  };
+  // Default fields are now part of the project's state, no need to merge here.
+  const stateForInserter: State = state;
 
   const handleAddPartial = () => {
     const newPartial: PromptPartial = {
@@ -88,10 +75,10 @@ export function PromptPartialsConfig({
   const handleUpdatePartial = (
     id: string,
     field: keyof PromptPartial,
-    value: string,
+    value: string
   ) => {
     const updatedPartials = promptPartials.map((partial) =>
-      partial.id === id ? { ...partial, [field]: value } : partial,
+      partial.id === id ? { ...partial, [field]: value } : partial
     );
     onChange(updatedPartials);
   };
@@ -99,7 +86,7 @@ export function PromptPartialsConfig({
   const handleDeletePartial = (id: string) => {
     delete contentRefs.current[id];
     const updatedPartials = promptPartials.filter(
-      (partial) => partial.id !== id,
+      (partial) => partial.id !== id
     );
     onChange(updatedPartials);
     // Clean up inserter visibility state
@@ -169,7 +156,7 @@ export function PromptPartialsConfig({
                           handleUpdatePartial(
                             partial.id,
                             "name",
-                            e.target.value,
+                            e.target.value
                           )
                         }
                         placeholder="e.g., common_instructions"
@@ -218,7 +205,7 @@ export function PromptPartialsConfig({
                                 handleUpdatePartial(
                                   partial.id,
                                   "content",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                               placeholder="Enter the reusable prompt text here..."
@@ -251,7 +238,7 @@ export function PromptPartialsConfig({
                                   handleUpdatePartial(
                                     partial.id,
                                     "content",
-                                    newValue,
+                                    newValue
                                   )
                                 }
                               />

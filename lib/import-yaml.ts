@@ -96,6 +96,7 @@ export function importFromYaml(
     publicInformation: (doc.state?.public_information || []).map(mapStateField),
   };
 
+
   // Map Manager
   const manager: Manager = doc.manager || { type: "TurnBasedPhaseManager" }; // Default manager if missing
 

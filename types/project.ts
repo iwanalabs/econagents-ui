@@ -42,7 +42,7 @@ export interface Agent {
 
 export interface StateField {
   name: string;
-  type: StateFieldType; // Use the union type
+  type: StateFieldType;
   default?: any;
   defaultFactory?: string;
   eventKey?: string;

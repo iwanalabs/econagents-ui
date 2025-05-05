@@ -132,7 +132,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
       description: `Project "${updatedProjectData.name}" has been updated with the imported configuration.`,
     });
 
-    // Refresh the page to reflect the changes from localStorage
+    // // Refresh the page to reflect the changes from localStorage
     window.location.reload();
   };
 
