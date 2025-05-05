@@ -43,13 +43,13 @@ export function AgentsConfig({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [currentAgent, setCurrentAgent] = useState<Agent>({
     id: 0,
-    role_id: 0,
+    roleId: 0,
   });
 
   const handleAddAgent = () => {
     setCurrentAgent({
       id: agents.length > 0 ? Math.max(...agents.map((a) => a.id)) + 1 : 1,
-      role_id: agentRoles.length > 0 ? agentRoles[0].role_id : 0,
+      roleId: agentRoles.length > 0 ? agentRoles[0].roleId : 0,
     });
     setEditingIndex(null);
     setIsDialogOpen(true);
@@ -68,7 +68,7 @@ export function AgentsConfig({
   };
 
   const handleSaveAgent = () => {
-    if (currentAgent.role_id === 0) return;
+    if (currentAgent.roleId === 0) return;
 
     let newAgents: Agent[];
     if (editingIndex !== null) {
@@ -83,7 +83,7 @@ export function AgentsConfig({
   };
 
   const getRoleName = (roleId: number) => {
-    const role = agentRoles.find((r) => r.role_id === roleId);
+    const role = agentRoles.find((r) => r.roleId === roleId);
     return role ? role.name : "Unknown Role";
   };
 
@@ -120,7 +120,7 @@ export function AgentsConfig({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Agent {agent.id}</CardTitle>
                 <CardDescription>
-                  Role: {getRoleName(agent.role_id)}
+                  Role: {getRoleName(agent.roleId)}
                 </CardDescription>
               </CardHeader>
               <CardFooter className="flex justify-end space-x-2">
@@ -157,11 +157,11 @@ export function AgentsConfig({
             <div className="grid gap-2">
               <Label htmlFor="role-id">Role</Label>
               <Select
-                value={currentAgent.role_id.toString()}
+                value={currentAgent.roleId.toString()}
                 onValueChange={(value) =>
                   setCurrentAgent({
                     ...currentAgent,
-                    role_id: Number.parseInt(value),
+                    roleId: Number.parseInt(value),
                   })
                 }
               >
@@ -171,10 +171,10 @@ export function AgentsConfig({
                 <SelectContent>
                   {agentRoles.map((role) => (
                     <SelectItem
-                      key={role.role_id}
-                      value={role.role_id.toString()}
+                      key={role.roleId}
+                      value={role.roleId.toString()}
                     >
-                      {role.name} (ID: {role.role_id})
+                      {role.name} (ID: {role.roleId})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -187,7 +187,7 @@ export function AgentsConfig({
             </Button>
             <Button
               onClick={handleSaveAgent}
-              disabled={currentAgent.role_id === 0}
+              disabled={currentAgent.roleId === 0}
             >
               Save
             </Button>

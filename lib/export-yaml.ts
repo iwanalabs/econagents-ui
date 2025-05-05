@@ -17,7 +17,10 @@ function formatYamlMultilineString(str: string, indentLevel: number): string {
     .join("\n")}`;
 }
 
-export async function exportToYaml(project: Project, serverConfig: ServerConfig): Promise<void> {
+export async function exportToYaml(
+  project: Project,
+  serverConfig: ServerConfig
+): Promise<void> {
   let yaml = `name: "${project.name}"\n`;
   if (project.description) {
     yaml += `description: "${project.description}"\n`;
@@ -42,32 +45,32 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
   if (project.agentRoles && project.agentRoles.length > 0) {
     yaml += "agent_roles:\n";
     project.agentRoles.forEach((role) => {
-      yaml += `  - role_id: ${role.role_id}\n`;
+      yaml += `  - role_id: ${role.roleId}\n`;
       yaml += `    name: "${role.name}"\n`;
-      yaml += `    llm_type: "${role.llm_type}"\n`;
+      yaml += `    llm_type: "${role.llmType}"\n`;
       yaml += "    llm_params:\n";
-      yaml += `      model_name: "${role.llm_params.model_name}"\n`;
+      yaml += `      model_name: "${role.llmParams.modelName}"\n`;
 
       // Add optional llm params if they exist
       if (
-        role.llm_params.temperature !== undefined &&
-        role.llm_params.temperature !== null
+        role.llmParams.temperature !== undefined &&
+        role.llmParams.temperature !== null
       ) {
-        yaml += `      temperature: ${role.llm_params.temperature}\n`;
+        yaml += `      temperature: ${role.llmParams.temperature}\n`;
       }
       if (
-        role.llm_params.top_p !== undefined &&
-        role.llm_params.top_p !== null
+        role.llmParams.topP !== undefined &&
+        role.llmParams.topP !== null
       ) {
-        yaml += `      top_p: ${role.llm_params.top_p}\n`;
+        yaml += `      top_p: ${role.llmParams.topP}\n`;
       }
       // Add any other llm_params dynamically
-      Object.entries(role.llm_params)
+      Object.entries(role.llmParams)
         .filter(
           ([key]) =>
             !["model_name", "temperature", "top_p"].includes(key) &&
-            role.llm_params[key] !== undefined &&
-            role.llm_params[key] !== null,
+            role.llmParams[key] !== undefined &&
+            role.llmParams[key] !== null
         )
         .forEach(([key, value]) => {
           yaml += `      ${key}: ${JSON.stringify(value)}\n`; // Use JSON.stringify for safety
@@ -90,7 +93,7 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
     yaml += "agents:\n";
     project.agents.forEach((agent) => {
       yaml += `  - id: ${agent.id}\n`;
-      yaml += `    role_id: ${agent.role_id}\n`;
+      yaml += `    role_id: ${agent.roleId}\n`;
     });
     yaml += "\n";
   }
@@ -130,7 +133,7 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
             case "dict":
               try {
                 defaultValue = JSON.stringify(
-                  JSON.parse(String(field.default)),
+                  JSON.parse(String(field.default))
                 );
               } catch {
                 defaultValue = `"${field.default}"`;
@@ -141,6 +144,7 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
               break;
           }
         } catch (e) {
+          console.error("Error parsing default value:", e);
           defaultValue = `"${field.default}"`;
         }
         fieldYaml += `${indent}  default: ${defaultValue}\n`;
@@ -164,7 +168,7 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
     const combinedMetaFields = [
       ...defaultMetaFields,
       ...customMetaFields.filter(
-        (field) => !defaultMetaFieldNames.has(field.name),
+        (field) => !defaultMetaFieldNames.has(field.name)
       ),
     ];
     yaml += formatStateFields(combinedMetaFields, "    ");
@@ -246,7 +250,6 @@ export async function exportToYaml(project: Project, serverConfig: ServerConfig)
     } catch (err: any) {
       if (err.name === "AbortError") {
         console.log("User cancelled the save dialog.");
-        throw new Error("Save cancelled by user.");
       } else {
         console.error("Error saving file:", err);
         throw new Error("Failed to save file.");

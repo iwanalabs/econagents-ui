@@ -26,10 +26,8 @@ import {
   Trash2Icon,
   EditIcon,
   LockIcon,
-  Baseline,
   KeyRound,
   Link2,
-  Link2Off,
   Variable,
 } from "lucide-react";
 import type { State, StateField } from "@/types/project";
@@ -324,7 +322,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               <p className="text-sm font-medium text-foreground truncate min-w-0">
                 {field.name}
                 {field.optional && ( // Add indicator if optional
-                  <span className="text-xs text-muted-foreground ml-1">(Optional)</span>
+                  <span className="text-xs text-muted-foreground ml-1">
+                    (Optional)
+                  </span>
                 )}
               </p>
 
@@ -567,7 +567,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 </div>
               </>
             )}
-          
+
             {/* Add Optional Checkbox */}
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -585,6 +585,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
             </Button>
             <Button
               onClick={handleSaveField}

@@ -13,13 +13,13 @@ export interface Project {
 }
 
 export interface AgentRole {
-  role_id: number;
+  roleId: number;
   name: string;
-  llm_type: string;
-  llm_params: {
-    model_name: string;
+  llmType: string;
+  llmParams: {
+    modelName: string;
     temperature?: number;
-    top_p?: number;
+    topP?: number;
     [key: string]: any;
   };
   prompts: Record<string, string>;
@@ -27,7 +27,7 @@ export interface AgentRole {
 
 export interface Agent {
   id: number;
-  role_id: number;
+  roleId: number;
 }
 
 export interface StateField {

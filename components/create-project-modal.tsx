@@ -13,8 +13,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import type { Project } from "@/types/project";
-// Import server config types and hook
-import type { ServerConfig } from "@/types";
 import { useServerConfigs } from "@/hooks/use-server-configs";
 import {
   Select,
@@ -135,8 +133,11 @@ export function CreateProjectModal({
             </Select>
             {serverConfigs.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Please create a server configuration first via the "Manage
-                Servers" button.
+                Please create a server configuration first via the{" "}
+                <Button variant="link" size="sm" onClick={() => router.push("/servers")}>
+                  Manage Servers
+                </Button>
+                button.
               </p>
             )}
           </div>

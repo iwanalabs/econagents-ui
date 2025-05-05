@@ -81,11 +81,11 @@ export function AgentRolesConfig({
   const [currentRole, setCurrentRole] = useState<
     Omit<AgentRole, "prompts"> & { prompts: Record<string, string> }
   >({
-    role_id: 0,
+    roleId: 0,
     name: "",
-    llm_type: "ChatOpenAI",
-    llm_params: {
-      model_name: "gpt-4o",
+    llmType: "ChatOpenAI",
+    llmParams: {
+      modelName: "gpt-4o",
     },
     prompts: { system: "", user: "" },
   });
@@ -218,13 +218,13 @@ export function AgentRolesConfig({
 
   const handleAddRole = () => {
     setCurrentRole({
-      role_id:
+      roleId:
         agentRoles.length > 0
-          ? Math.max(...agentRoles.map((r) => r.role_id)) + 1
+          ? Math.max(...agentRoles.map((r) => r.roleId)) + 1
           : 1,
       name: "",
-      llm_type: "ChatOpenAI",
-      llm_params: { model_name: "gpt-4o" },
+      llmType: "ChatOpenAI",
+      llmParams: { modelName: "gpt-4o" },
       prompts: { system: "", user: "" },
     });
     setPhasePrompts([]);
@@ -258,7 +258,7 @@ export function AgentRolesConfig({
 
   const handleDeleteRole = (index: number) => {
     // Get the role ID before deleting the role
-    const roleIdToDelete = agentRoles[index].role_id;
+    const roleIdToDelete = agentRoles[index].roleId;
 
     // Filter out the deleted role
     const newRoles = [...agentRoles];
@@ -267,7 +267,7 @@ export function AgentRolesConfig({
 
     // Filter out agents associated with the deleted role
     const newAgents = agents.filter(
-      (agent) => agent.role_id !== roleIdToDelete
+      (agent) => agent.roleId !== roleIdToDelete
     );
     onAgentsChange(newAgents); // Call the callback to update agents in the parent
   };
@@ -380,11 +380,11 @@ export function AgentRolesConfig({
                 <CardTitle className="text-lg flex justify-between items-center">
                   <span>{role.name}</span>
                   <span className="text-sm text-muted-foreground">
-                    ID: {role.role_id}
+                    ID: {role.roleId}
                   </span>
                 </CardTitle>
                 <CardDescription>
-                  {role.llm_type} - {role.llm_params.model_name}
+                  {role.llmType} - {role.llmParams.modelName}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pb-2">
@@ -453,9 +453,9 @@ export function AgentRolesConfig({
                   <div className="grid gap-2">
                     <Label htmlFor="llm-type">LLM Type</Label>
                     <Select
-                      value={currentRole.llm_type}
+                      value={currentRole.llmType}
                       onValueChange={(value) =>
-                        setCurrentRole({ ...currentRole, llm_type: value })
+                        setCurrentRole({ ...currentRole, llmType: value })
                       }
                     >
                       <SelectTrigger id="llm-type">
@@ -471,13 +471,13 @@ export function AgentRolesConfig({
                     <Label htmlFor="model-name">Model Name</Label>
                     <Input
                       id="model-name"
-                      value={currentRole.llm_params.model_name}
+                      value={currentRole.llmParams.modelName}
                       onChange={(e) =>
                         setCurrentRole({
                           ...currentRole,
-                          llm_params: {
-                            ...currentRole.llm_params,
-                            model_name: e.target.value,
+                          llmParams: {
+                            ...currentRole.llmParams,
+                            modelName: e.target.value,
                           },
                         })
                       }
@@ -499,12 +499,12 @@ export function AgentRolesConfig({
                         step="0.1"
                         min="0"
                         max="2"
-                        value={currentRole.llm_params.temperature || 0.7}
+                        value={currentRole.llmParams.temperature || 0.7}
                         onChange={(e) =>
                           setCurrentRole({
                             ...currentRole,
-                            llm_params: {
-                              ...currentRole.llm_params,
+                            llmParams: {
+                              ...currentRole.llmParams,
                               temperature:
                                 Number.parseFloat(e.target.value) || 0,
                             },
@@ -520,13 +520,13 @@ export function AgentRolesConfig({
                         step="0.1"
                         min="0"
                         max="1"
-                        value={currentRole.llm_params.top_p || 1}
+                        value={currentRole.llmParams.topP || 1}
                         onChange={(e) =>
                           setCurrentRole({
                             ...currentRole,
-                            llm_params: {
-                              ...currentRole.llm_params,
-                              top_p: Number.parseFloat(e.target.value) || 0,
+                            llmParams: {
+                              ...currentRole.llmParams,
+                              topP: Number.parseFloat(e.target.value) || 0,
                             },
                           })
                         }

@@ -8,12 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  ChevronLeftIcon,
-  DownloadIcon,
-  SaveIcon,
-  UploadIcon,
-} from "lucide-react";
+import { ChevronLeftIcon, FileOutput, SaveIcon, Import } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Project } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
@@ -172,15 +167,21 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         title: "Configuration saved",
         description: "Your YAML configuration file has been saved.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error exporting YAML:", error);
-      if (error.message === "Save cancelled by user.") {
+      if (
+        error instanceof Error &&
+        error.message === "Save cancelled by user."
+      ) {
         toast({
           title: "Export cancelled",
           description: "You cancelled the file save operation.",
           variant: "default",
         });
-      } else if (error.message === "Failed to save file.") {
+      } else if (
+        error instanceof Error &&
+        error.message === "Failed to save file."
+      ) {
         toast({
           title: "Export failed",
           description:
@@ -233,7 +234,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               className="gap-2"
               disabled={!project.serverConfigId}
             >
-              <DownloadIcon className="h-4 w-4" />
+              <FileOutput className="h-4 w-4" />
               Export
             </Button>
             <Button
@@ -242,7 +243,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onClick={handleOpenImportOverwriteModal}
               className="gap-2"
             >
-              <UploadIcon className="h-4 w-4" />
+              <Import className="h-4 w-4" />
               Import & Overwrite
             </Button>
             <Button size="sm" onClick={handleSave} className="gap-2">
@@ -317,7 +318,14 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                     {serverConfigs.length === 0 && (
                       <p className="text-xs text-muted-foreground">
                         Please create a server configuration first via the
-                        "Manage Servers" button on the dashboard.
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => router.push("/servers")}
+                        >
+                          Manage Servers
+                        </Button>
+                        button on the dashboard.
                       </p>
                     )}
                     {!project.serverConfigId && serverConfigs.length > 0 && (

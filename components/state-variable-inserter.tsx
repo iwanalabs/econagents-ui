@@ -5,7 +5,6 @@ import type { State, StateField } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StateVariableInserterProps {
   state: State | undefined;
