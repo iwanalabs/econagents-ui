@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 // Add UploadIcon
-import { PlusIcon, SearchIcon, ServerIcon, XIcon, UploadIcon } from "lucide-react";
+import {
+  PlusIcon,
+  SearchIcon,
+  ServerIcon,
+  XIcon,
+  UploadIcon,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,12 +40,12 @@ export function ProjectDashboard() {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [projectToDeleteId, setProjectToDeleteId] = useState<string | null>(
-    null,
+    null
   );
   const router = useRouter();
 
   const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCreateProject = (project: Project) => {
@@ -48,21 +54,11 @@ export function ProjectDashboard() {
     setIsCreateModalOpen(false);
   };
 
-  // Add handler for importing a project
   const handleImportProject = (importedProject: Project) => {
-    // Check if project with the same name already exists (optional)
-    // const nameExists = projects.some(p => p.name === importedProject.name);
-    // if (nameExists) {
-    //   // Handle name collision - maybe rename or show error
-    //   console.warn(`Project with name "${importedProject.name}" already exists.`);
-    //   // Potentially add suffix: importedProject.name = `${importedProject.name}_imported_${Date.now()}`;
-    // }
-
     const newProjects = [...projects, importedProject];
     setProjects(newProjects);
     setIsImportModalOpen(false); // Close the import modal
   };
-
 
   const handleDeleteProject = (id: string) => {
     setProjectToDeleteId(id);
@@ -73,10 +69,10 @@ export function ProjectDashboard() {
     if (!projectToDeleteId) return;
 
     const currentProjects = JSON.parse(
-      localStorage.getItem("projects") || "[]",
+      localStorage.getItem("projects") || "[]"
     );
     const newProjects = currentProjects.filter(
-      (project: Project) => project.id !== projectToDeleteId,
+      (project: Project) => project.id !== projectToDeleteId
     );
     setProjects(newProjects);
 
@@ -194,7 +190,6 @@ export function ProjectDashboard() {
         onImportProject={handleImportProject}
         mode="create" // Explicitly set mode for dashboard usage
       />
-
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

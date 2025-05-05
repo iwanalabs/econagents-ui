@@ -60,7 +60,6 @@ export async function exportToYaml(
       if (role.llmParams.topP !== undefined && role.llmParams.topP !== null) {
         yaml += `      top_p: ${role.llmParams.topP}\n`;
       }
-      // Add any other llm_params dynamically
       Object.entries(role.llmParams)
         .filter(
           ([key]) =>
@@ -69,14 +68,12 @@ export async function exportToYaml(
             role.llmParams[key] !== null
         )
         .forEach(([key, value]) => {
-          yaml += `      ${key}: ${JSON.stringify(value)}\n`; // Use JSON.stringify for safety
+          yaml += `      ${key}: ${JSON.stringify(value)}\n`;
         });
 
       if (role.prompts && Object.keys(role.prompts).length > 0) {
         yaml += "    prompts:\n";
-        // Format prompts as a list of single-key dictionaries
         Object.entries(role.prompts).forEach(([key, value]) => {
-          // Use 10 spaces indent for content under a list item's key
           yaml += `      - ${key}: ${formatYamlMultilineString(value, 10)}\n`;
         });
       }
@@ -253,7 +250,10 @@ export async function exportToYaml(
         types: [
           {
             description: "YAML files",
-            accept: { "text/yaml": [".yaml", ".yml"] },
+            accept: {
+              "text/yaml": [".yaml", ".yml"],
+              "application/yaml": [".yaml", ".yml"],
+            },
           },
         ],
       });

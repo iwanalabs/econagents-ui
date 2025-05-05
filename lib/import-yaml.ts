@@ -62,18 +62,24 @@ export function importFromYaml(
   }
 
   // Map Agent Roles
-  const agentRoles: AgentRole[] = (doc.agent_roles || []).map((role: any) => ({
-    roleId: role.role_id,
-    name: role.name,
-    llmType: role.llm_type,
-    llmParams: {
-      modelName: role.llm_params?.model_name || "unknown",
-      temperature: role.llm_params?.temperature,
-      topP: role.llm_params?.top_p,
-      ...(role.llm_params || {}),
-    },
-    prompts: parsePrompts(role.prompts),
-  }));
+  const agentRoles: AgentRole[] = (doc.agent_roles || []).map((role: any) => {
+    // Extract known params and the rest
+    const { model_name, temperature, top_p, ...otherParams } =
+      role.llm_params || {};
+
+    return {
+      roleId: role.role_id,
+      name: role.name,
+      llmType: role.llm_type,
+      llmParams: {
+        modelName: model_name || "unknown",
+        temperature: temperature,
+        topP: top_p,
+        ...otherParams,
+      },
+      prompts: parsePrompts(role.prompts),
+    };
+  });
 
   // Map Agents
   const agents: Agent[] = (doc.agents || []).map((agent: any) => ({

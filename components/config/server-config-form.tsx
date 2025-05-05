@@ -106,7 +106,7 @@ export function ServerConfigForm({
               <Input
                 id="logs-dir"
                 value={config.logsDir || ""}
-                onChange={(e) => handleChange("logs_dir", e.target.value)}
+                onChange={(e) => handleChange("logsDir", e.target.value)}
                 placeholder="./logs"
               />
             </div>
@@ -114,7 +114,7 @@ export function ServerConfigForm({
               <Label htmlFor="log-level">Log Level (Optional)</Label>
               <Select
                 value={config.logLevel || "none"}
-                onValueChange={(value) => handleChange("log_level", value)}
+                onValueChange={(value) => handleChange("logLevel", value)}
               >
                 <SelectTrigger id="log-level">
                   <SelectValue placeholder="Select log level (optional)" />
@@ -140,7 +140,7 @@ export function ServerConfigForm({
                 id="phase-transition-event"
                 value={config.phaseTransitionEvent || ""}
                 onChange={(e) =>
-                  handleChange("phase_transition_event", e.target.value)
+                  handleChange("phaseTransitionEvent", e.target.value)
                 }
                 placeholder="e.g., next_phase"
               />
@@ -153,7 +153,7 @@ export function ServerConfigForm({
                 id="phase-identifier-key"
                 value={config.phaseIdentifierKey || ""}
                 onChange={(e) =>
-                  handleChange("phase_identifier_key", e.target.value)
+                  handleChange("phaseIdentifierKey", e.target.value)
                 }
                 placeholder="e.g., current_phase"
               />
