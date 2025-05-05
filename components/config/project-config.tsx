@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeftIcon, DownloadIcon, SaveIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  DownloadIcon,
+  SaveIcon,
+  UploadIcon,
+} from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Project } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
@@ -18,6 +23,17 @@ import { PromptPartialsConfig } from "@/components/config/prompt-partials-config
 import { exportToYaml } from "@/lib/export-yaml";
 import { useToast } from "@/hooks/use-toast";
 import { useServerConfigs } from "@/hooks/use-server-configs";
+import { ImportProjectModal } from "@/components/import-project-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -37,6 +53,17 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [serverConfigs] = useServerConfigs();
+  const [isImportOverwriteModalOpen, setIsImportOverwriteModalOpen] =
+    useState(false);
+  const [isConfirmOverwriteDialogOpen, setIsConfirmOverwriteDialogOpen] =
+    useState(false);
+  const [projectDataToOverwrite, setProjectDataToOverwrite] = useState<Omit<
+    Project,
+    "id" | "createdAt"
+  > | null>(null);
+  const [overwriteServerConfigId, setOverwriteServerConfigId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const foundProject = projects.find((p) => p.id === projectId);
@@ -67,7 +94,54 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     });
   };
 
-  const handleExport = () => {
+  const handleOpenImportOverwriteModal = () => {
+    setIsImportOverwriteModalOpen(true);
+  };
+
+  const handleParseSuccess = (
+    parsedData: Omit<Project, "id" | "createdAt">,
+    selectedServerConfigId: string
+  ) => {
+    setProjectDataToOverwrite(parsedData);
+    setOverwriteServerConfigId(selectedServerConfigId);
+    setIsImportOverwriteModalOpen(false);
+    setIsConfirmOverwriteDialogOpen(true);
+  };
+
+  const confirmOverwrite = () => {
+    if (!project || !projectDataToOverwrite || !overwriteServerConfigId) return;
+
+    const updatedProjectData: Project = {
+      ...projectDataToOverwrite,
+      id: project.id,
+      createdAt: project.createdAt,
+      serverConfigId: overwriteServerConfigId,
+    };
+
+    setProject(updatedProjectData);
+
+    const currentProjects = JSON.parse(
+      localStorage.getItem("projects") || "[]"
+    );
+    const updatedProjects = currentProjects.map((p: Project) =>
+      p.id === project.id ? updatedProjectData : p
+    );
+    localStorage.setItem("projects", JSON.stringify(updatedProjects));
+
+    setProjectDataToOverwrite(null);
+    setOverwriteServerConfigId(null);
+    setIsConfirmOverwriteDialogOpen(false);
+
+    toast({
+      title: "Project Overwritten",
+      description: `Project "${updatedProjectData.name}" has been updated with the imported configuration.`,
+    });
+
+    // Refresh the page to reflect the changes from localStorage
+    window.location.reload();
+  };
+
+  const handleExport = async () => {
     if (!project) return;
     if (!project.serverConfigId) {
       toast({
@@ -93,18 +167,33 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     }
 
     try {
-      exportToYaml(project, selectedServerConfig);
+      await exportToYaml(project, selectedServerConfig);
       toast({
-        title: "Configuration exported",
-        description: "Your YAML configuration file has been downloaded.",
+        title: "Configuration saved",
+        description: "Your YAML configuration file has been saved.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error exporting YAML:", error);
-      toast({
-        title: "Export failed",
-        description: "There was an error exporting your configuration.",
-        variant: "destructive",
-      });
+      if (error.message === "Save cancelled by user.") {
+        toast({
+          title: "Export cancelled",
+          description: "You cancelled the file save operation.",
+          variant: "default",
+        });
+      } else if (error.message === "Failed to save file.") {
+        toast({
+          title: "Export failed",
+          description:
+            "Could not save the file. The browser might not support the File System Access API or another error occurred.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Export failed",
+          description: "An unexpected error occurred during export.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -147,6 +236,15 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               <DownloadIcon className="h-4 w-4" />
               Export
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenImportOverwriteModal}
+              className="gap-2"
+            >
+              <UploadIcon className="h-4 w-4" />
+              Import & Overwrite
+            </Button>
             <Button size="sm" onClick={handleSave} className="gap-2">
               <SaveIcon className="h-4 w-4" />
               Save
@@ -158,7 +256,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
       <main className="flex-1 container py-6 px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="basic">Project</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
             <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
             <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
@@ -186,24 +284,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                         updateProject({ description: e.target.value })
                       }
                       rows={4}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-game-id">Game ID (Optional)</Label>
-                    <Input
-                      id="project-game-id"
-                      type="number"
-                      value={project.gameId ?? ""}
-                      onChange={(e) =>
-                        updateProject({
-                          gameId:
-                            e.target.value === ""
-                              ? null
-                              : Number(e.target.value),
-                        })
-                      }
-                      placeholder="Leave blank if not needed"
-                      min="0"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -307,6 +387,46 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
           </TabsContent>
         </Tabs>
       </main>
+
+      <ImportProjectModal
+        isOpen={isImportOverwriteModalOpen}
+        onClose={() => setIsImportOverwriteModalOpen(false)}
+        mode="overwrite"
+        onParseSuccess={handleParseSuccess}
+      />
+
+      <AlertDialog
+        open={isConfirmOverwriteDialogOpen}
+        onOpenChange={setIsConfirmOverwriteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Overwrite?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will replace the current project configuration (
+              <strong>{project.name}</strong>) with the content from the
+              imported file (
+              <strong>{projectDataToOverwrite?.name || "Unknown"}</strong>).
+              <br />
+              <br />
+              This action cannot be undone. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setProjectDataToOverwrite(null);
+                setOverwriteServerConfigId(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmOverwrite}>
+              Confirm Overwrite
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

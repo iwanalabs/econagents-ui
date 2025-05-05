@@ -62,9 +62,8 @@ interface AgentRolesConfigProps {
   onAgentsChange: (agents: Agent[]) => void;
 }
 
-// Helper type for phase-specific prompts within the state
 interface PhasePrompt {
-  phase: number | string; // Allow string initially for input flexibility
+  phase: number | string;
   system: string;
   user: string;
 }
@@ -79,7 +78,6 @@ export function AgentRolesConfig({
 }: AgentRolesConfigProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  // Role state only needs default prompts, phase prompts are managed separately in UI state
   const [currentRole, setCurrentRole] = useState<
     Omit<AgentRole, "prompts"> & { prompts: Record<string, string> }
   >({
@@ -89,17 +87,15 @@ export function AgentRolesConfig({
     llm_params: {
       model_name: "gpt-4o",
     },
-    prompts: { system: "", user: "" }, // Initialize with default keys
+    prompts: { system: "", user: "" },
   });
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");
   const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
-  // State to manage visibility of StateVariableInserter and PartialsList per prompt key
   const [inserterVisibility, setInserterVisibility] = useState<
     Record<string, { state: boolean; partials: boolean }>
   >({});
 
-  // Create a combined state object for the variable inserter
   const stateForInserter: State = {
     ...state,
     metaInformation: [
@@ -107,23 +103,21 @@ export function AgentRolesConfig({
       ...(state.metaInformation || []).filter(
         (field) =>
           !defaultMetaFields.some(
-            (defaultField) => defaultField.name === field.name,
-          ),
+            (defaultField) => defaultField.name === field.name
+          )
       ),
     ],
   };
 
-  // Refs for Textareas - Simplified as we removed custom prompts
   const contentRefs = useRef<{
-    system: React.RefObject<HTMLTextAreaElement>;
-    user: React.RefObject<HTMLTextAreaElement>;
-    [key: string]: React.RefObject<HTMLTextAreaElement>; // For phase prompts
+    system: React.RefObject<HTMLTextAreaElement | null>;
+    user: React.RefObject<HTMLTextAreaElement | null>;
+    [key: string]: React.RefObject<HTMLTextAreaElement | null>;
   }>({
     system: createRef<HTMLTextAreaElement>(),
     user: createRef<HTMLTextAreaElement>(),
   });
 
-  // Function to ensure ref exists for a given key (mostly for phase prompts now)
   const ensureRef = (key: string) => {
     if (!contentRefs.current[key]) {
       contentRefs.current[key] = createRef<HTMLTextAreaElement>();
@@ -131,9 +125,6 @@ export function AgentRolesConfig({
     return contentRefs.current[key];
   };
 
-  // Clean up refs when dialog closes or component unmounts might be needed
-  // depending on lifecycle, but usually React handles this okay.
-  // Clear refs when starting add/edit to avoid stale refs
   const clearRefs = () => {
     contentRefs.current = {
       system: createRef<HTMLTextAreaElement>(),
@@ -141,10 +132,9 @@ export function AgentRolesConfig({
     }; // Reset default refs, phase refs created dynamically
   };
 
-  // Helper function to toggle visibility for state variables or partials for a specific key
   const toggleInserterVisibility = (
     key: string,
-    type: "state" | "partials",
+    type: "state" | "partials"
   ) => {
     setInserterVisibility((prev) => {
       const currentVisibility = prev[key] || { state: false, partials: false }; // Default to hidden
@@ -158,10 +148,9 @@ export function AgentRolesConfig({
     });
   };
 
-  // Helper function to check if an inserter/list is visible for a specific key and type
   const isInserterVisible = (
     key: string,
-    type: "state" | "partials",
+    type: "state" | "partials"
   ): boolean => {
     return inserterVisibility[key]?.[type] ?? false; // Default to hidden
   };
@@ -173,7 +162,7 @@ export function AgentRolesConfig({
 
   // Helper function to parse phase prompts from the role data
   const parsePhasePrompts = (
-    prompts: Record<string, string>,
+    prompts: Record<string, string>
   ): PhasePrompt[] => {
     const parsed: PhasePrompt[] = [];
     const phaseKeys = new Set<number>();
@@ -278,7 +267,7 @@ export function AgentRolesConfig({
 
     // Filter out agents associated with the deleted role
     const newAgents = agents.filter(
-      (agent) => agent.role_id !== roleIdToDelete,
+      (agent) => agent.role_id !== roleIdToDelete
     );
     onAgentsChange(newAgents); // Call the callback to update agents in the parent
   };
@@ -318,7 +307,7 @@ export function AgentRolesConfig({
   const handlePhasePromptChange = (
     index: number,
     field: keyof PhasePrompt,
-    value: string | number,
+    value: string | number
   ) => {
     setPhasePrompts((prev) => {
       const updated = [...prev];
@@ -340,9 +329,9 @@ export function AgentRolesConfig({
 
   // Function to insert partial placeholder into textarea
   const handleInsertPartial = (
-    textareaRef: React.RefObject<HTMLTextAreaElement>,
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>,
     partialName: string,
-    updateFn: (value: string) => void,
+    updateFn: (value: string) => void
   ) => {
     if (!textareaRef.current) return;
 
@@ -609,7 +598,7 @@ export function AgentRolesConfig({
                                     onChange={(e) =>
                                       handleDefaultPromptChange(
                                         "system",
-                                        e.target.value,
+                                        e.target.value
                                       )
                                     }
                                     rows={5}
@@ -624,7 +613,7 @@ export function AgentRolesConfig({
                                       onClick={() =>
                                         toggleInserterVisibility(
                                           "system",
-                                          "state",
+                                          "state"
                                         )
                                       }
                                       className="gap-1 text-xs"
@@ -641,7 +630,7 @@ export function AgentRolesConfig({
                                       onClick={() =>
                                         toggleInserterVisibility(
                                           "system",
-                                          "partials",
+                                          "partials"
                                         )
                                       }
                                       className="gap-1 text-xs"
@@ -661,7 +650,7 @@ export function AgentRolesConfig({
                                       onInsert={(newValue) =>
                                         handleDefaultPromptChange(
                                           "system",
-                                          newValue,
+                                          newValue
                                         )
                                       }
                                     />
@@ -677,8 +666,8 @@ export function AgentRolesConfig({
                                           (val) =>
                                             handleDefaultPromptChange(
                                               "system",
-                                              val,
-                                            ),
+                                              val
+                                            )
                                         )
                                       }
                                     />
@@ -727,7 +716,7 @@ export function AgentRolesConfig({
                                     onChange={(e) =>
                                       handleDefaultPromptChange(
                                         "user",
-                                        e.target.value,
+                                        e.target.value
                                       )
                                     }
                                     rows={5}
@@ -742,7 +731,7 @@ export function AgentRolesConfig({
                                       onClick={() =>
                                         toggleInserterVisibility(
                                           "user",
-                                          "state",
+                                          "state"
                                         )
                                       }
                                       className="gap-1 text-xs"
@@ -759,7 +748,7 @@ export function AgentRolesConfig({
                                       onClick={() =>
                                         toggleInserterVisibility(
                                           "user",
-                                          "partials",
+                                          "partials"
                                         )
                                       }
                                       className="gap-1 text-xs"
@@ -779,7 +768,7 @@ export function AgentRolesConfig({
                                       onInsert={(newValue) =>
                                         handleDefaultPromptChange(
                                           "user",
-                                          newValue,
+                                          newValue
                                         )
                                       }
                                     />
@@ -795,8 +784,8 @@ export function AgentRolesConfig({
                                           (val) =>
                                             handleDefaultPromptChange(
                                               "user",
-                                              val,
-                                            ),
+                                              val
+                                            )
                                         )
                                       }
                                     />
@@ -849,7 +838,7 @@ export function AgentRolesConfig({
                                   handlePhasePromptChange(
                                     index,
                                     "phase",
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                                 placeholder="e.g., 3"
@@ -898,7 +887,7 @@ export function AgentRolesConfig({
                                         handlePhasePromptChange(
                                           index,
                                           "system",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       rows={4}
@@ -913,7 +902,7 @@ export function AgentRolesConfig({
                                         onClick={() =>
                                           toggleInserterVisibility(
                                             `phase_${index}_system`,
-                                            "state",
+                                            "state"
                                           )
                                         }
                                         className="gap-1 text-xs"
@@ -921,7 +910,7 @@ export function AgentRolesConfig({
                                         <VariableIcon className="h-3 w-3" />
                                         {isInserterVisible(
                                           `phase_${index}_system`,
-                                          "state",
+                                          "state"
                                         )
                                           ? "Hide"
                                           : "Show"}{" "}
@@ -933,7 +922,7 @@ export function AgentRolesConfig({
                                         onClick={() =>
                                           toggleInserterVisibility(
                                             `phase_${index}_system`,
-                                            "partials",
+                                            "partials"
                                           )
                                         }
                                         className="gap-1 text-xs"
@@ -941,7 +930,7 @@ export function AgentRolesConfig({
                                         <ListIcon className="h-3 w-3" />
                                         {isInserterVisible(
                                           `phase_${index}_system`,
-                                          "partials",
+                                          "partials"
                                         )
                                           ? "Hide"
                                           : "Show"}{" "}
@@ -951,18 +940,18 @@ export function AgentRolesConfig({
                                     {/* Conditionally render StateVariableInserter */}
                                     {isInserterVisible(
                                       `phase_${index}_system`,
-                                      "state",
+                                      "state"
                                     ) && (
                                       <StateVariableInserter
                                         state={stateForInserter} // Use combined state
                                         textareaRef={ensureRef(
-                                          `phase_${index}_system`,
+                                          `phase_${index}_system`
                                         )}
                                         onInsert={(newValue) =>
                                           handlePhasePromptChange(
                                             index,
                                             "system",
-                                            newValue,
+                                            newValue
                                           )
                                         }
                                       />
@@ -970,7 +959,7 @@ export function AgentRolesConfig({
                                     {/* Conditionally render PartialsList */}
                                     {isInserterVisible(
                                       `phase_${index}_system`,
-                                      "partials",
+                                      "partials"
                                     ) && (
                                       <PartialsList
                                         promptPartials={promptPartials}
@@ -982,8 +971,8 @@ export function AgentRolesConfig({
                                               handlePhasePromptChange(
                                                 index,
                                                 "system",
-                                                val,
-                                              ),
+                                                val
+                                              )
                                           )
                                         }
                                       />
@@ -1034,7 +1023,7 @@ export function AgentRolesConfig({
                                         handlePhasePromptChange(
                                           index,
                                           "user",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       rows={4}
@@ -1049,7 +1038,7 @@ export function AgentRolesConfig({
                                         onClick={() =>
                                           toggleInserterVisibility(
                                             `phase_${index}_user`,
-                                            "state",
+                                            "state"
                                           )
                                         }
                                         className="gap-1 text-xs"
@@ -1057,7 +1046,7 @@ export function AgentRolesConfig({
                                         <VariableIcon className="h-3 w-3" />
                                         {isInserterVisible(
                                           `phase_${index}_user`,
-                                          "state",
+                                          "state"
                                         )
                                           ? "Hide"
                                           : "Show"}{" "}
@@ -1069,7 +1058,7 @@ export function AgentRolesConfig({
                                         onClick={() =>
                                           toggleInserterVisibility(
                                             `phase_${index}_user`,
-                                            "partials",
+                                            "partials"
                                           )
                                         }
                                         className="gap-1 text-xs"
@@ -1077,7 +1066,7 @@ export function AgentRolesConfig({
                                         <ListIcon className="h-3 w-3" />
                                         {isInserterVisible(
                                           `phase_${index}_user`,
-                                          "partials",
+                                          "partials"
                                         )
                                           ? "Hide"
                                           : "Show"}{" "}
@@ -1087,18 +1076,18 @@ export function AgentRolesConfig({
                                     {/* Conditionally render StateVariableInserter */}
                                     {isInserterVisible(
                                       `phase_${index}_user`,
-                                      "state",
+                                      "state"
                                     ) && (
                                       <StateVariableInserter
                                         state={stateForInserter} // Use combined state
                                         textareaRef={ensureRef(
-                                          `phase_${index}_user`,
+                                          `phase_${index}_user`
                                         )}
                                         onInsert={(newValue) =>
                                           handlePhasePromptChange(
                                             index,
                                             "user",
-                                            newValue,
+                                            newValue
                                           )
                                         }
                                       />
@@ -1106,7 +1095,7 @@ export function AgentRolesConfig({
                                     {/* Conditionally render PartialsList */}
                                     {isInserterVisible(
                                       `phase_${index}_user`,
-                                      "partials",
+                                      "partials"
                                     ) && (
                                       <PartialsList
                                         promptPartials={promptPartials}
@@ -1118,8 +1107,8 @@ export function AgentRolesConfig({
                                               handlePhasePromptChange(
                                                 index,
                                                 "user",
-                                                val,
-                                              ),
+                                                val
+                                              )
                                           )
                                         }
                                       />

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { PlusIcon, EditIcon, Trash2Icon } from "lucide-react";
 import { useServerConfigs } from "@/hooks/use-server-configs";
-import { ServerConfigForm } from "@/components/server-config-form";
+import { ServerConfigForm } from "@/components/config/server-config-form";
 import type { ServerConfig } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";

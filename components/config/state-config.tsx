@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -39,8 +39,6 @@ interface StateConfigProps {
   onChange: (state: State) => void;
 }
 
-// Define the default meta fields that cannot be removed or edited (except maybe default value)
-// Export this constant
 export const defaultMetaFields: ReadonlyArray<StateField> = [
   {
     name: "game_id",
@@ -48,6 +46,7 @@ export const defaultMetaFields: ReadonlyArray<StateField> = [
     default: 0,
     eventKey: "game_id",
     excludeFromMapping: false,
+    optional: false, // Add optional flag
   },
   {
     name: "player_name",
@@ -55,20 +54,23 @@ export const defaultMetaFields: ReadonlyArray<StateField> = [
     default: null,
     eventKey: "player_name",
     excludeFromMapping: false,
-  }, // Use null for optional string
+    optional: true, // Add optional flag (can be null)
+  },
   {
     name: "player_number",
     type: "int",
     default: null,
     eventKey: "player_number",
     excludeFromMapping: false,
-  }, // Use null for optional int
+    optional: true, // Add optional flag (can be null)
+  },
   {
     name: "players",
     type: "list",
     defaultFactory: "list",
     eventKey: "players",
     excludeFromMapping: false,
+    optional: false, // Add optional flag
   },
   {
     name: "phase",
@@ -76,6 +78,7 @@ export const defaultMetaFields: ReadonlyArray<StateField> = [
     default: 0,
     eventKey: "phase",
     excludeFromMapping: false,
+    optional: false, // Add optional flag
   },
 ];
 
@@ -174,12 +177,50 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     // Work on a copy to modify before saving
     const fieldToSave: StateField = { ...currentField };
 
-    // Automatically set/unset defaultFactory based on type
+    // Validation for non-optional fields needing a default
+    if (
+      !fieldToSave.optional &&
+      (fieldToSave.default === undefined ||
+        fieldToSave.default === null ||
+        fieldToSave.default === "") &&
+      fieldToSave.type !== "list" && // list/dict can use defaultFactory
+      fieldToSave.type !== "dict"
+    ) {
+      console.error(
+        `Field '${fieldToSave.name}' is not optional and requires a default value.`
+      );
+      // TODO: Show toast notification to the user
+      // toast({ title: "Error", description: `Field '${fieldToSave.name}' requires a default value.`, variant: "destructive" });
+      return;
+    }
+
+    // Automatically set/unset defaultFactory based on type and if default is provided
     if (fieldToSave.type === "list" || fieldToSave.type === "dict") {
-      fieldToSave.defaultFactory = fieldToSave.type;
+      // If a specific default like '[]' or '{}' is provided, don't use factory
+      if (
+        fieldToSave.default !== undefined &&
+        fieldToSave.default !== null &&
+        fieldToSave.default !== ""
+      ) {
+        delete fieldToSave.defaultFactory;
+      } else {
+        // Otherwise, ensure factory is set (even if optional, the type needs a default constructor)
+        fieldToSave.defaultFactory = fieldToSave.type;
+        // Clear default value if factory is used
+        delete fieldToSave.default;
+      }
     } else {
       // Ensure defaultFactory is not present for other types
       delete fieldToSave.defaultFactory;
+      // If optional and no default provided, explicitly set to null
+      if (
+        fieldToSave.optional &&
+        (fieldToSave.default === undefined ||
+          fieldToSave.default === null ||
+          fieldToSave.default === "")
+      ) {
+        fieldToSave.default = null;
+      }
     }
 
     // Prevent adding meta fields with names matching defaults
@@ -189,7 +230,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       editingIndex === null
     ) {
       console.error(
-        `Cannot add a meta field with the reserved name: ${fieldToSave.name}`,
+        `Cannot add a meta field with the reserved name: ${fieldToSave.name}`
       );
       // Optionally show a toast notification here
       // toast({ title: "Error", description: `Cannot use reserved meta field name: ${fieldToSave.name}`, variant: "destructive" });
@@ -211,7 +252,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
         // For now, let's just update the default value if changed.
         // More robust logic might be needed depending on requirements.
         console.warn(
-          `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`,
+          `Attempting to edit default meta field: ${originalField.name}. Only 'default' value might be updated.`
         );
         // Example: Only allow updating default value
         // newFields = [...currentFields];
@@ -282,6 +323,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               {/* Field Name (Column 2 - Takes remaining space) */}
               <p className="text-sm font-medium text-foreground truncate min-w-0">
                 {field.name}
+                {field.optional && ( // Add indicator if optional
+                  <span className="text-xs text-muted-foreground ml-1">(Optional)</span>
+                )}
               </p>
 
               {/* Type (Column 3) */}
@@ -523,10 +567,24 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 </div>
               </>
             )}
+          
+            {/* Add Optional Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="field-optional"
+                checked={currentField.optional || false}
+                onCheckedChange={(checked) =>
+                  setCurrentField({
+                    ...currentField,
+                    optional: checked === true,
+                  })
+                }
+              />
+              <Label htmlFor="field-optional">Optional Field</Label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
             </Button>
             <Button
               onClick={handleSaveField}

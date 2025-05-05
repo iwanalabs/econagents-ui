@@ -22,9 +22,7 @@ export interface AgentRole {
     top_p?: number;
     [key: string]: any;
   };
-  prompts: {
-    [key: string]: string;
-  };
+  prompts: Record<string, string>;
 }
 
 export interface Agent {
@@ -39,6 +37,7 @@ export interface StateField {
   defaultFactory?: string;
   eventKey?: string;
   excludeFromMapping?: boolean;
+  optional?: boolean;
 }
 
 export interface State {
@@ -62,7 +61,6 @@ export interface ServerConfig {
   logLevel?: string | null;
   phaseTransitionEvent?: string | null;
   phaseIdentifierKey?: string | null;
-  observabilityProvider?: string | null;
   [key: string]: any;
 }
 

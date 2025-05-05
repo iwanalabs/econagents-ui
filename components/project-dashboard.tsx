@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { PlusIcon, SearchIcon, ServerIcon, XIcon } from "lucide-react";
+// Add UploadIcon
+import { PlusIcon, SearchIcon, ServerIcon, XIcon, UploadIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,12 +21,16 @@ import { CreateProjectModal } from "@/components/create-project-modal";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Project } from "@/types/project";
 import { ServerManagementModal } from "@/components/server-management-modal";
+// Import the new ImportProjectModal
+import { ImportProjectModal } from "@/components/import-project-modal";
 
 export function ProjectDashboard() {
   const [projects, setProjects] = useLocalStorage<Project[]>("projects", []);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
+  // Add state for import modal
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [projectToDeleteId, setProjectToDeleteId] = useState<string | null>(
@@ -42,6 +47,22 @@ export function ProjectDashboard() {
     setProjects(newProjects);
     setIsCreateModalOpen(false);
   };
+
+  // Add handler for importing a project
+  const handleImportProject = (importedProject: Project) => {
+    // Check if project with the same name already exists (optional)
+    // const nameExists = projects.some(p => p.name === importedProject.name);
+    // if (nameExists) {
+    //   // Handle name collision - maybe rename or show error
+    //   console.warn(`Project with name "${importedProject.name}" already exists.`);
+    //   // Potentially add suffix: importedProject.name = `${importedProject.name}_imported_${Date.now()}`;
+    // }
+
+    const newProjects = [...projects, importedProject];
+    setProjects(newProjects);
+    setIsImportModalOpen(false); // Close the import modal
+  };
+
 
   const handleDeleteProject = (id: string) => {
     setProjectToDeleteId(id);
@@ -86,6 +107,16 @@ export function ProjectDashboard() {
             >
               <ServerIcon className="h-4 w-4" />
               Manage Servers
+            </Button>
+            {/* Add Import Project Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              <UploadIcon className="h-4 w-4" />
+              Import Project
             </Button>
           </div>
         </div>
@@ -155,6 +186,15 @@ export function ProjectDashboard() {
         isOpen={isServerModalOpen}
         onClose={() => setIsServerModalOpen(false)}
       />
+
+      {/* Add the Import Project Modal */}
+      <ImportProjectModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportProject={handleImportProject}
+        mode="create" // Explicitly set mode for dashboard usage
+      />
+
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

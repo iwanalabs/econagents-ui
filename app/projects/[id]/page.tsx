@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ProjectConfig } from "@/components/project-config";
+import { ProjectConfig } from "@/components/config/project-config";
 
 export default function ProjectPage() {
   const params = useParams();
