@@ -453,46 +453,22 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 </span>
               </span>
 
-              {/* Event Key (Column 5 - Meta only) */}
+              {/* Event Key (Column 5) */}
               <span
-                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate ${
-                  !isMetaTab && "invisible" // Hide column if not the meta tab
-                }`}
-                title={
-                  isMetaTab ? `Event Key: ${field.eventKey || "None"}` : ""
-                }
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate`}
+                title={`Event Key: ${field.eventKey || "None"}`}
               >
-                {isMetaTab ? (
-                  <>
-                    <KeyRound className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                    <span className="truncate">{field.eventKey || "None"}</span>
-                  </>
-                ) : (
-                  <>&nbsp;</>
-                )}
+                <KeyRound className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                <span className="truncate">{field.eventKey || "None"}</span>
               </span>
 
-              {/* Exclude Mapping (Column 6 - Meta only) */}
+              {/* Exclude Mapping (Column 6) */}
               <span
-                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate ${
-                  !isMetaTab && "invisible" // Hide column if not the meta tab
-                }`}
-                title={
-                  isMetaTab
-                    ? field.excludeFromMapping
-                      ? "Mapping: N"
-                      : "Mapping: Y"
-                    : ""
-                }
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate`}
+                title={field.excludeFromMapping ? "Mapping: N" : "Mapping: Y"}
               >
-                {isMetaTab ? (
-                  <>
-                    <Link2 className="h-4 w-4 mr-1.5 flex-shrink-0" />
-                    {field.excludeFromMapping ? "N" : "Y"}
-                  </>
-                ) : (
-                  <>&nbsp;</>
-                )}
+                <Link2 className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                {field.excludeFromMapping ? "N" : "Y"}
               </span>
 
               {/* Action Buttons (Column 7) */}
@@ -665,7 +641,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                           }}
                         >
                           <SelectTrigger id="field-default">
-                            <SelectValue placeholder="Select default (optional)" />
+                            <SelectValue placeholder="True/False" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="true">True</SelectItem>
@@ -717,40 +693,39 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     </div>
                   </div>
 
-                  {activeTab === "meta" && (
-                    <>
-                      <div className="grid gap-2">
-                        <Label htmlFor="event-key">Event Key</Label>
-                        <Input
-                          id="event-key"
-                          value={currentField.eventKey || ""}
-                          onChange={(e) =>
-                            setCurrentField({
-                              ...currentField,
-                              eventKey: e.target.value,
-                            })
-                          }
-                          placeholder="e.g., round"
-                        />
-                      </div>
+                  {/* Always show Event Key and Exclude Mapping */}
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="event-key">Event Key</Label>
+                      <Input
+                        id="event-key"
+                        value={currentField.eventKey || ""}
+                        onChange={(e) =>
+                          setCurrentField({
+                            ...currentField,
+                            eventKey: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., round"
+                      />
+                    </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="exclude-mapping"
-                          checked={currentField.excludeFromMapping || false}
-                          onCheckedChange={(checked) =>
-                            setCurrentField({
-                              ...currentField,
-                              excludeFromMapping: checked === true,
-                            })
-                          }
-                        />
-                        <Label htmlFor="exclude-mapping">
-                          Exclude from mapping?
-                        </Label>
-                      </div>
-                    </>
-                  )}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="exclude-mapping"
+                        checked={currentField.excludeFromMapping || false}
+                        onCheckedChange={(checked) =>
+                          setCurrentField({
+                            ...currentField,
+                            excludeFromMapping: checked === true,
+                          })
+                        }
+                      />
+                      <Label htmlFor="exclude-mapping">
+                        Exclude from mapping?
+                      </Label>
+                    </div>
+                  </>
 
                   {/* Add Optional Checkbox */}
                   <div className="flex items-center space-x-2">
