@@ -12,6 +12,16 @@ export interface Project {
   gameId?: number | null;
 }
 
+// Define a union type for allowed state field types
+export type StateFieldType =
+  | "str"
+  | "int"
+  | "float"
+  | "bool"
+  | "list"
+  | "dict"
+  | "MarketState";
+
 export interface AgentRole {
   roleId: number;
   name: string;
@@ -32,7 +42,7 @@ export interface Agent {
 
 export interface StateField {
   name: string;
-  type: string;
+  type: StateFieldType; // Use the union type
   default?: any;
   defaultFactory?: string;
   eventKey?: string;

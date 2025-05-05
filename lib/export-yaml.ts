@@ -105,7 +105,11 @@ export async function exportToYaml(
       fieldYaml += `${indent}  type: "${field.type}"\n`;
 
       // Always add default_factory for list and dict
-      if (field.type === "list" || field.type === "dict") {
+      if (
+        field.type === "list" ||
+        field.type === "dict" ||
+        field.type === "MarketState"
+      ) {
         fieldYaml += `${indent}  default_factory: "${field.type}"\n`;
       }
 
@@ -113,7 +117,8 @@ export async function exportToYaml(
       if (
         field.default !== undefined &&
         field.default !== null &&
-        field.default !== "" // Also check for empty string as potentially non-meaningful
+        field.default !== "" && // Also check for empty string as potentially non-meaningful
+        field.type !== "MarketState"
       ) {
         let defaultValueString: string;
         switch (field.type) {

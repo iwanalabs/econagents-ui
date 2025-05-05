@@ -90,12 +90,18 @@ const typeColorMapping: Record<string, string> = {
   bool: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   list: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   dict: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+  MarketState:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
 };
 const defaultTypeColor =
   "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"; // Fallback color
 
 // Helper function to validate default value for list/dict
 const validateDefaultValue = (type: string, value: string): string | null => {
+  if (type === "MarketState") {
+    return null;
+  }
+
   const trimmedValue = value.trim();
   if (!trimmedValue) {
     return null; // Empty is valid (will likely use defaultFactory or be null if optional)
@@ -225,7 +231,8 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       !fieldToSave.optional &&
       (isNullOrUndefined || isEmptyString) && // Check if effectively no value is provided
       fieldToSave.type !== "list" && // list/dict can use defaultFactory implicitly if empty
-      fieldToSave.type !== "dict"
+      fieldToSave.type !== "dict" &&
+      fieldToSave.type !== "MarketState" // MarketState uses defaultFactory
     ) {
       console.error(
         `Field '${fieldToSave.name}' is required and needs a default value.`
@@ -283,6 +290,10 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
         // Keep finalDefaultValue as null
       }
       // The case where !optional and finalDefaultValue is null is handled by the validation above
+    } else if (fieldToSave.type === "MarketState") {
+      // Always use defaultFactory for MarketState
+      fieldToSave.defaultFactory = "MarketState";
+      finalDefaultValue = null; // No default value allowed
     } else {
       // Handle other types (str, int, float)
       delete fieldToSave.defaultFactory;
@@ -323,12 +334,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
             console.warn(
               `Could not parse default value "${finalDefaultValue}" as float for field "${fieldToSave.name}"`
             );
-            // Keep as potentially invalid string or handle as needed for optional fields
           }
         }
-        // Keep as string for 'str' type
       }
-      // The case where !optional and (isNullOrUndefined || isEmptyString) is handled by validation above
     }
 
     // Update the field with the processed default value
@@ -443,7 +451,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
               {/* Type (Column 3) */}
               <span
-                className={`inline-flex justify-center items-center rounded-sm px-2 py-0.5 text-xs font-medium w-[70px] text-center ${
+                className={` inline-flex justify-center items-center rounded-sm px-10 py-1 text-xs font-medium w-[70px] text-center ${
                   typeColorMapping[field.type] ?? defaultTypeColor
                 }`}
                 title={`Type: ${field.type}`}
@@ -455,16 +463,20 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               <span
                 className="inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate"
                 title={`Default: ${
-                  field.default === undefined || field.default === null
-                    ? "None"
-                    : JSON.stringify(field.default)
+                  field.type === "MarketState"
+                    ? "Not applicable"
+                    : field.default === undefined || field.default === null
+                      ? "None"
+                      : JSON.stringify(field.default)
                 }`}
               >
                 <Variable className="h-3 w-3 mr-1.5 flex-shrink-0" />
                 <span className="truncate">
-                  {field.default !== undefined && field.default !== null
-                    ? JSON.stringify(field.default)
-                    : "None"}
+                  {field.type === "MarketState"
+                    ? "Not applicable"
+                    : field.default !== undefined && field.default !== null
+                      ? JSON.stringify(field.default)
+                      : "None"}
                 </span>
               </span>
 
@@ -628,6 +640,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     <SelectItem value="bool">Boolean</SelectItem>
                     <SelectItem value="list">List</SelectItem>
                     <SelectItem value="dict">Dictionary</SelectItem>
+                    <SelectItem value="MarketState">MarketState</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -665,6 +678,14 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                       <SelectItem value="false">False</SelectItem>
                     </SelectContent>
                   </Select>
+                ) : // Hide default input for MarketState
+                currentField.type === "MarketState" ? (
+                  <Input
+                    id="field-default"
+                    value="Not Applicable"
+                    disabled
+                    className="text-muted-foreground italic"
+                  />
                 ) : (
                   // Existing Input for other types
                   <Input
@@ -693,11 +714,12 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                   />
                 )}
                 {/* Display validation error */}
-                {defaultValidationError && (
-                  <p className="text-xs text-destructive mt-1">
-                    {defaultValidationError}
-                  </p>
-                )}
+                {defaultValidationError &&
+                  currentField.type !== "MarketState" && (
+                    <p className="text-xs text-destructive mt-1">
+                      {defaultValidationError}
+                    </p>
+                  )}
               </div>
             </div>
 
