@@ -51,24 +51,20 @@ export async function exportToYaml(
       yaml += "    llm_params:\n";
       yaml += `      model_name: "${role.llmParams.modelName}"\n`;
 
-      // Add optional llm params if they exist
       if (
         role.llmParams.temperature !== undefined &&
         role.llmParams.temperature !== null
       ) {
         yaml += `      temperature: ${role.llmParams.temperature}\n`;
       }
-      if (
-        role.llmParams.topP !== undefined &&
-        role.llmParams.topP !== null
-      ) {
+      if (role.llmParams.topP !== undefined && role.llmParams.topP !== null) {
         yaml += `      top_p: ${role.llmParams.topP}\n`;
       }
       // Add any other llm_params dynamically
       Object.entries(role.llmParams)
         .filter(
           ([key]) =>
-            !["model_name", "temperature", "top_p"].includes(key) &&
+            !["modelName", "temperature", "topP"].includes(key) &&
             role.llmParams[key] !== undefined &&
             role.llmParams[key] !== null
         )
@@ -108,46 +104,53 @@ export async function exportToYaml(
       fieldYaml += `${indent}- name: "${field.name}"\n`;
       fieldYaml += `${indent}  type: "${field.type}"\n`;
 
-      if (field.defaultFactory) {
-        fieldYaml += `${indent}  default_factory: "${field.defaultFactory}"\n`;
-      } else if (
+      // Always add default_factory for list and dict
+      if (field.type === "list" || field.type === "dict") {
+        fieldYaml += `${indent}  default_factory: "${field.type}"\n`;
+      }
+
+      // Handle default value if it exists and is meaningful
+      if (
         field.default !== undefined &&
         field.default !== null &&
-        field.default !== ""
+        field.default !== "" // Also check for empty string as potentially non-meaningful
       ) {
-        let defaultValue = field.default;
-        try {
-          switch (field.type) {
-            case "int":
-              defaultValue = Number.parseInt(String(field.default), 10);
-              if (isNaN(defaultValue)) defaultValue = `"${field.default}"`;
-              break;
-            case "float":
-              defaultValue = Number.parseFloat(String(field.default));
-              if (isNaN(defaultValue)) defaultValue = `"${field.default}"`;
-              break;
-            case "bool":
-              defaultValue = String(field.default).toLowerCase() === "true";
-              break;
-            case "list":
-            case "dict":
-              try {
-                defaultValue = JSON.stringify(
-                  JSON.parse(String(field.default))
-                );
-              } catch {
-                defaultValue = `"${field.default}"`;
-              }
-              break;
-            default:
-              defaultValue = `"${field.default}"`;
-              break;
-          }
-        } catch (e) {
-          console.error("Error parsing default value:", e);
-          defaultValue = `"${field.default}"`;
+        let defaultValueString: string;
+        switch (field.type) {
+          case "list":
+          case "dict":
+            // Use JSON.stringify for complex types
+            try {
+              // Ensure the value is stringified correctly
+              defaultValueString = JSON.stringify(field.default);
+            } catch (e) {
+              console.error(
+                `Error stringifying default value for ${field.name}:`,
+                field.default,
+                e
+              );
+              defaultValueString = ""; // Skip outputting default if stringify fails
+            }
+            break;
+          case "bool":
+            // Output boolean literals directly
+            defaultValueString = String(field.default);
+            break;
+          case "int":
+          case "float":
+            // Output number literals directly
+            defaultValueString = String(field.default);
+            break;
+          case "str":
+          default:
+            // Quote strings
+            defaultValueString = `"${String(field.default).replace(/"/g, '\\"')}"`; // Escape quotes within the string
+            break;
         }
-        fieldYaml += `${indent}  default: ${defaultValue}\n`;
+        // Only add the default line if defaultValueString is not empty
+        if (defaultValueString) {
+          fieldYaml += `${indent}  default: ${defaultValueString}\n`;
+        }
       }
 
       if (field.eventKey) {
@@ -156,6 +159,11 @@ export async function exportToYaml(
 
       if (field.excludeFromMapping === true) {
         fieldYaml += `${indent}  exclude_from_mapping: true\n`;
+      }
+
+      // Explicitly add optional: true if the field is marked as optional
+      if (field.optional === true) {
+        fieldYaml += `${indent}  optional: true\n`;
       }
     });
     return fieldYaml;
@@ -205,6 +213,7 @@ export async function exportToYaml(
     runnerType = "TurnBasedGameRunner";
   }
 
+  yaml += `  game_id: 0\n`;
   yaml += `  type: "${runnerType}"\n`;
   yaml += `  hostname: "${serverConfig.hostname}"\n`;
   yaml += `  port: ${serverConfig.port}\n`;
