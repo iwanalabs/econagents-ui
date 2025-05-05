@@ -94,6 +94,35 @@ const typeColorMapping: Record<string, string> = {
 const defaultTypeColor =
   "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"; // Fallback color
 
+// Helper function to validate default value for list/dict
+const validateDefaultValue = (type: string, value: string): string | null => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return null; // Empty is valid (will likely use defaultFactory or be null if optional)
+  }
+
+  if (type === "list" || type === "dict") {
+    try {
+      const parsedValue = JSON.parse(trimmedValue);
+      if (type === "list" && !Array.isArray(parsedValue)) {
+        return "Default value must be a valid JSON list (e.g., [1, 2]).";
+      }
+      if (
+        type === "dict" &&
+        (typeof parsedValue !== "object" ||
+          parsedValue === null ||
+          Array.isArray(parsedValue))
+      ) {
+        return 'Default value must be a valid JSON object (e.g., {"key": "value"}).';
+      }
+    } catch (e) {
+      return "Invalid JSON format for default value.";
+    }
+  }
+  // No need to validate boolean here anymore as Select handles it
+  return null; // Valid or not a list/dict type requiring JSON validation
+};
+
 export function StateConfig({ state, onChange }: StateConfigProps) {
   const [activeTab, setActiveTab] = useState("meta");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -103,6 +132,10 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     type: "str",
     default: "",
   });
+  // Add state for validation error
+  const [defaultValidationError, setDefaultValidationError] = useState<
+    string | null
+  >(null);
 
   const handleAddField = () => {
     setCurrentField({
@@ -112,6 +145,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     });
     setEditingIndex(null);
     setIsDialogOpen(true);
+    setDefaultValidationError(null); // Reset validation error
   };
 
   const handleEditField = (field: StateField, index: number) => {
@@ -124,6 +158,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     setCurrentField({ ...field });
     setEditingIndex(index);
     setIsDialogOpen(true);
+    setDefaultValidationError(null); // Reset validation error
   };
 
   const handleDeleteField = (index: number) => {
@@ -165,6 +200,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
   const handleSaveField = () => {
     if (!currentField.name) return;
 
+    // Clear previous validation error
+    setDefaultValidationError(null);
+
     const fieldTypeKey =
       activeTab === "meta"
         ? "metaInformation"
@@ -175,51 +213,126 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     // Work on a copy to modify before saving
     const fieldToSave: StateField = { ...currentField };
 
-    // Validation for non-optional fields needing a default
+    // --- Start Validation ---
+    let finalDefaultValue: any = fieldToSave.default; // Keep original type for boolean
+    const isNullOrUndefined =
+      finalDefaultValue === null || finalDefaultValue === undefined;
+    const isEmptyString =
+      typeof finalDefaultValue === "string" && finalDefaultValue.trim() === "";
+
+    // Check if the field is required and has no effective default value provided
     if (
       !fieldToSave.optional &&
-      (fieldToSave.default === undefined ||
-        fieldToSave.default === null ||
-        fieldToSave.default === "") &&
-      fieldToSave.type !== "list" && // list/dict can use defaultFactory
+      (isNullOrUndefined || isEmptyString) && // Check if effectively no value is provided
+      fieldToSave.type !== "list" && // list/dict can use defaultFactory implicitly if empty
       fieldToSave.type !== "dict"
     ) {
       console.error(
-        `Field '${fieldToSave.name}' is not optional and requires a default value.`
+        `Field '${fieldToSave.name}' is required and needs a default value.`
       );
-      // TODO: Show toast notification to the user
-      // toast({ title: "Error", description: `Field '${fieldToSave.name}' requires a default value.`, variant: "destructive" });
-      return;
+      setDefaultValidationError(
+        "Default value is required for non-optional fields."
+      );
+      return; // Prevent saving
     }
+
+    // Validate list/dict default values if provided as a non-empty string
+    let jsonValidationError: string | null = null;
+    if (
+      typeof finalDefaultValue === "string" &&
+      !isEmptyString &&
+      (fieldToSave.type === "list" || fieldToSave.type === "dict")
+    ) {
+      jsonValidationError = validateDefaultValue(
+        fieldToSave.type,
+        finalDefaultValue
+      );
+      if (jsonValidationError) {
+        setDefaultValidationError(jsonValidationError);
+        return;
+      }
+    }
+    // --- End Validation ---
 
     // Automatically set/unset defaultFactory based on type and if default is provided
     if (fieldToSave.type === "list" || fieldToSave.type === "dict") {
-      // If a specific default like '[]' or '{}' is provided, don't use factory
-      if (
-        fieldToSave.default !== undefined &&
-        fieldToSave.default !== null &&
-        fieldToSave.default !== ""
-      ) {
-        delete fieldToSave.defaultFactory;
+      // If a specific default like '[]' or '{}' is provided (and is valid JSON), don't use factory
+      if (!isNullOrUndefined && !isEmptyString) {
+        try {
+          // Attempt to parse JSON string for list/dict, keep as is if already object/array
+          if (typeof finalDefaultValue === "string") {
+            finalDefaultValue = JSON.parse(finalDefaultValue);
+          }
+          delete fieldToSave.defaultFactory;
+        } catch (e) {
+          // This should ideally be caught by validateDefaultValue earlier
+          setDefaultValidationError("Invalid JSON format for default value.");
+          return;
+        }
       } else {
         // Otherwise, ensure factory is set (even if optional, the type needs a default constructor)
         fieldToSave.defaultFactory = fieldToSave.type;
         // Clear default value if factory is used
-        delete fieldToSave.default;
+        finalDefaultValue = null; // Set to null when factory is used
       }
-    } else {
-      // Ensure defaultFactory is not present for other types
+    } else if (fieldToSave.type === "bool") {
+      // Boolean value is already set correctly by the Select's onChange
       delete fieldToSave.defaultFactory;
-      // If optional and no default provided, explicitly set to null
-      if (
-        fieldToSave.optional &&
-        (fieldToSave.default === undefined ||
-          fieldToSave.default === null ||
-          fieldToSave.default === "")
-      ) {
-        fieldToSave.default = null;
+      // If optional and value is null, keep it as null
+      if (fieldToSave.optional && finalDefaultValue === null) {
+        // Keep finalDefaultValue as null
       }
+      // The case where !optional and finalDefaultValue is null is handled by the validation above
+    } else {
+      // Handle other types (str, int, float)
+      delete fieldToSave.defaultFactory;
+      // If optional and no default provided (null, undefined, empty string), explicitly set to null
+      if (fieldToSave.optional && (isNullOrUndefined || isEmptyString)) {
+        finalDefaultValue = null;
+      } else if (!isNullOrUndefined && !isEmptyString) {
+        // Attempt to parse int/float if needed
+        if (fieldToSave.type === "int") {
+          const parsedInt = parseInt(String(finalDefaultValue), 10);
+          if (!isNaN(parsedInt)) {
+            finalDefaultValue = parsedInt;
+          } else {
+            // Add validation error if parsing fails for a required field
+            if (!fieldToSave.optional) {
+              setDefaultValidationError(
+                `Invalid integer value: "${finalDefaultValue}"`
+              );
+              return;
+            }
+            console.warn(
+              `Could not parse default value "${finalDefaultValue}" as int for field "${fieldToSave.name}"`
+            );
+            // Keep as potentially invalid string or handle as needed for optional fields
+          }
+        } else if (fieldToSave.type === "float") {
+          const parsedFloat = parseFloat(String(finalDefaultValue));
+          if (!isNaN(parsedFloat)) {
+            finalDefaultValue = parsedFloat;
+          } else {
+            // Add validation error if parsing fails for a required field
+            if (!fieldToSave.optional) {
+              setDefaultValidationError(
+                `Invalid float value: "${finalDefaultValue}"`
+              );
+              return;
+            }
+            console.warn(
+              `Could not parse default value "${finalDefaultValue}" as float for field "${fieldToSave.name}"`
+            );
+            // Keep as potentially invalid string or handle as needed for optional fields
+          }
+        }
+        // Keep as string for 'str' type
+      }
+      // The case where !optional and (isNullOrUndefined || isEmptyString) is handled by validation above
     }
+
+    // Update the field with the processed default value
+    fieldToSave.default = finalDefaultValue;
 
     // Prevent adding meta fields with names matching defaults
     if (
@@ -521,17 +634,70 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
               <div className="grid gap-2">
                 <Label htmlFor="field-default">Default Value</Label>
-                <Input
-                  id="field-default"
-                  value={currentField.default?.toString() || ""}
-                  onChange={(e) =>
-                    setCurrentField({
-                      ...currentField,
-                      default: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., 0"
-                />
+                {currentField.type === "bool" ? (
+                  <Select
+                    value={
+                      currentField.default === true
+                        ? "true"
+                        : currentField.default === false
+                          ? "false"
+                          : "" // Represent null/undefined as empty string for the Select placeholder
+                    }
+                    onValueChange={(value) => {
+                      setCurrentField({
+                        ...currentField,
+                        default:
+                          value === "true"
+                            ? true
+                            : value === "false"
+                              ? false
+                              : null, // Store actual boolean or null
+                      });
+                      // Boolean select doesn't need text validation
+                      setDefaultValidationError(null);
+                    }}
+                  >
+                    <SelectTrigger id="field-default">
+                      <SelectValue placeholder="Select default (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">True</SelectItem>
+                      <SelectItem value="false">False</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  // Existing Input for other types
+                  <Input
+                    id="field-default"
+                    value={currentField.default?.toString() || ""}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      // Validate immediately on change for non-boolean types
+                      const validationError = validateDefaultValue(
+                        currentField.type,
+                        newValue
+                      );
+                      setDefaultValidationError(validationError);
+                      // Update the field state
+                      setCurrentField({
+                        ...currentField,
+                        default: newValue,
+                      });
+                    }}
+                    placeholder={
+                      currentField.type === "list" ||
+                      currentField.type === "dict"
+                        ? `e.g., ${currentField.type === "list" ? "[1, 2, 3]" : "{'key': 'value'}"}`
+                        : "e.g., 0"
+                    }
+                  />
+                )}
+                {/* Display validation error */}
+                {defaultValidationError && (
+                  <p className="text-xs text-destructive mt-1">
+                    {defaultValidationError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -593,7 +759,8 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                 !currentField.name ||
                 (activeTab === "meta" &&
                   defaultMetaFieldNames.has(currentField.name) &&
-                  editingIndex === null)
+                  editingIndex === null) ||
+                !!defaultValidationError // Disable if validation error exists
               }
             >
               Save
