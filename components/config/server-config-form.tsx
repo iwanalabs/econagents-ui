@@ -57,7 +57,6 @@ export function ServerConfigForm({
       </CardHeader>
       <CardContent className="pt-6">
         <div className="grid gap-6 max-w-2xl">
-          {/* Add Name Field */}
           <div className="grid gap-2">
             <Label htmlFor="server-name">Configuration Name *</Label>
             <Input
@@ -69,8 +68,8 @@ export function ServerConfigForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid col-span-2 gap-2">
               <Label htmlFor="hostname">Hostname</Label>
               <Input
                 id="hostname"
@@ -79,10 +78,7 @@ export function ServerConfigForm({
                 placeholder="localhost"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
+            <div className="grid col-span-1 gap-2">
               <Label htmlFor="port">Port</Label>
               <Input
                 id="port"
@@ -93,7 +89,7 @@ export function ServerConfigForm({
                 min="0"
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid col-span-1 gap-2">
               <Label htmlFor="path">Path</Label>
               <Input
                 id="path"
@@ -115,13 +111,6 @@ export function ServerConfigForm({
               />
             </div>
             <div className="grid gap-2">
-              {" "}
-              {/* Placeholder or another field */}{" "}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid gap-2">
               <Label htmlFor="log-level">Log Level (Optional)</Label>
               <Select
                 value={config.logLevel || "none"}
@@ -137,25 +126,6 @@ export function ServerConfigForm({
                   <SelectItem value="WARNING">WARNING</SelectItem>
                   <SelectItem value="ERROR">ERROR</SelectItem>
                   <SelectItem value="CRITICAL">CRITICAL</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="observability-provider">
-                Observability Provider (Optional)
-              </Label>
-              <Select
-                value={config.observabilityProvider || "none"}
-                onValueChange={(value) =>
-                  handleChange("observability_provider", value)
-                }
-              >
-                <SelectTrigger id="observability-provider">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="langsmith">LangSmith</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -187,6 +157,29 @@ export function ServerConfigForm({
                 }
                 placeholder="e.g., current_phase"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="observability-provider">
+                Observability Provider (Optional)
+              </Label>
+              <Select
+                value={config.observabilityProvider || "none"}
+                onValueChange={(value) =>
+                  handleChange("observabilityProvider", value)
+                }
+              >
+                <SelectTrigger id="observability-provider">
+                  <SelectValue placeholder="Select provider (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="langsmith">LangSmith</SelectItem>
+                  <SelectItem value="langfuse">LangFuse</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
