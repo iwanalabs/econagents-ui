@@ -40,8 +40,12 @@ function mapStateField(yamlField: Record<string, any>): StateField {
     eventKey: yamlField.event_key,
     excludeFromMapping: yamlField.exclude_from_mapping,
     optional: yamlField.optional ?? false,
-    events: Array.isArray(yamlField.events) ? yamlField.events.filter((e: any) => typeof e === 'string') : undefined,
-    excludedEvents: Array.isArray(yamlField.excluded_events) ? yamlField.excluded_events.filter((e: any) => typeof e === 'string') : undefined,
+    events: Array.isArray(yamlField.events)
+      ? yamlField.events.filter((e: any) => typeof e === "string")
+      : undefined,
+    excludedEvents: Array.isArray(yamlField.excluded_events)
+      ? yamlField.excluded_events.filter((e: any) => typeof e === "string")
+      : undefined,
   };
 }
 
@@ -78,7 +82,9 @@ export function importFromYaml(
         ...otherParams,
       },
       prompts: parsePrompts(role.prompts),
-      task_phases: Array.isArray(role.task_phases) ? role.task_phases.filter((tp: any) => typeof tp === 'number') : [],
+      taskPhases: Array.isArray(role.task_phases)
+        ? role.task_phases.filter((tp: any) => typeof tp === "number")
+        : [],
     };
   });
 
@@ -97,9 +103,29 @@ export function importFromYaml(
     publicInformation: (doc.state?.public_information || []).map(mapStateField),
   };
 
-
   // Map Manager
-  const manager: Manager = doc.manager || { type: "TurnBasedPhaseManager" }; // Default manager if missing
+  const managerDataFromYaml = doc.manager || {};
+  const manager: Manager = {
+    type: managerDataFromYaml.type || "TurnBasedPhaseManager",
+  };
+
+  if (manager.type === "HybridPhaseManager" && doc.runner) {
+    const runnerDataFromYaml = doc.runner;
+    if (
+      runnerDataFromYaml.continuous_phases &&
+      Array.isArray(runnerDataFromYaml.continuous_phases)
+    ) {
+      manager.continuousPhases = runnerDataFromYaml.continuous_phases.filter(
+        (cp: any) => typeof cp === "number"
+      );
+    }
+    if (typeof runnerDataFromYaml.min_action_delay === "number") {
+      manager.minActionDelay = runnerDataFromYaml.min_action_delay;
+    }
+    if (typeof runnerDataFromYaml.max_action_delay === "number") {
+      manager.maxActionDelay = runnerDataFromYaml.max_action_delay;
+    }
+  }
 
   // Map Prompt Partials
   const promptPartials: PromptPartial[] = (doc.prompt_partials || []).map(

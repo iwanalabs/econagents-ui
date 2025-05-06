@@ -95,9 +95,9 @@ export function AgentRolesConfig({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [currentRole, setCurrentRole] = useState<
-    Omit<AgentRole, "prompts" | "task_phases"> & {
+    Omit<AgentRole, "prompts" | "taskPhases"> & {
       prompts: Record<string, string>;
-      task_phases_string?: string; // For input field
+      taskPhasesString?: string; 
     }
   >({
     roleId: 0,
@@ -107,7 +107,7 @@ export function AgentRolesConfig({
       modelName: "gpt-4o",
     },
     prompts: { system: "", user: "" },
-    task_phases_string: "",
+    taskPhasesString: "",
   });
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");
@@ -235,8 +235,7 @@ export function AgentRolesConfig({
       llmType: "ChatOpenAI",
       llmParams: { modelName: "gpt-4o" },
       prompts: { system: "", user: "" },
-      task_phases_string: "",
-      task_phases_excluded_string: "",
+      taskPhasesString: "",
     });
     setPhasePrompts([]);
     clearRefs();
@@ -259,7 +258,7 @@ export function AgentRolesConfig({
     setCurrentRole({
       ...roleToEdit,
       prompts: defaultPrompts,
-      task_phases_string: numbersToCommaSeparatedString(roleToEdit.task_phases),
+      taskPhasesString: numbersToCommaSeparatedString(roleToEdit.taskPhases),
     });
     setPhasePrompts(parsePhasePrompts(roleToEdit.prompts || {}));
     clearRefs();
@@ -291,7 +290,7 @@ export function AgentRolesConfig({
       llmType: currentRole.llmType,
       llmParams: currentRole.llmParams,
       prompts: combinePrompts(), // Combine prompts before saving
-      task_phases: parseCommaSeparatedNumbers(currentRole.task_phases_string),
+      taskPhases: parseCommaSeparatedNumbers(currentRole.taskPhasesString),
     };
 
     let newRoles: AgentRole[];
@@ -406,9 +405,9 @@ export function AgentRolesConfig({
                   <strong>Prompts:</strong>{" "}
                   {Object.keys(role.prompts || {}).length} defined
                 </div>
-                {role.task_phases && role.task_phases.length > 0 && (
+                {role.taskPhases && role.taskPhases.length > 0 && (
                   <div>
-                    <strong>Task Phases:</strong> {role.task_phases.join(", ")}
+                    <strong>Task Phases:</strong> {role.taskPhases.join(", ")}
                   </div>
                 )}
               </CardContent>
@@ -510,11 +509,11 @@ export function AgentRolesConfig({
                     </Label>
                     <Input
                       id="task-phases"
-                      value={currentRole.task_phases_string || ""}
+                      value={currentRole.taskPhasesString || ""}
                       onChange={(e) =>
                         setCurrentRole({
                           ...currentRole,
-                          task_phases_string: e.target.value,
+                          taskPhasesString: e.target.value,
                         })
                       }
                       placeholder="e.g., 1, 2, 5"

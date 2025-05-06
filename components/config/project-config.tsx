@@ -37,6 +37,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Helper function to parse comma-separated numbers
+const parseCommaSeparatedNumbers = (str: string | undefined): number[] => {
+  if (!str || str.trim() === "") return [];
+  return str
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s !== "")
+    .map(Number)
+    .filter((n) => !isNaN(n));
+};
+
 interface ProjectConfigProps {
   projectId: string;
 }
@@ -64,13 +75,47 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     const foundProject = projects.find((p) => p.id === projectId);
     if (foundProject) {
       if (!foundProject.serverConfigId && serverConfigs.length > 0) {
-        foundProject.serverConfigId = serverConfigs[0].id;
+        const projectToSet = { ...foundProject };
+        projectToSet.serverConfigId = serverConfigs[0].id;
+        setProject(projectToSet);
+      } else {
+        setProject(foundProject);
       }
-      setProject(foundProject);
     } else {
       router.push("/");
     }
   }, [projectId, projects, router, serverConfigs]);
+
+  useEffect(() => {
+    if (!project || !project.manager) return;
+
+    if (project.manager.type === "HybridPhaseManager") {
+      const expectedString = (project.manager.continuousPhases || []).join(", ");
+      if (project.manager.continuousPhasesString !== expectedString) {
+        setProject((prevProject) => {
+          if (!prevProject || !prevProject.manager) return prevProject;
+          return {
+            ...prevProject,
+            manager: {
+              ...prevProject.manager,
+              continuousPhasesString: expectedString,
+            },
+          };
+        });
+      }
+    } else {
+      if (project.manager.continuousPhasesString !== undefined) {
+        setProject((prevProject) => {
+          if (!prevProject || !prevProject.manager) return prevProject;
+          const { continuousPhasesString, ...restManager } = prevProject.manager;
+          return {
+            ...prevProject,
+            manager: restManager,
+          };
+        });
+      }
+    }
+  }, [project]);
 
   const handleSave = () => {
     if (!project) return;
@@ -201,7 +246,18 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   const updateProject = (updates: Partial<Project>) => {
     setProject((prevProject) => {
       if (!prevProject) return null;
-      return { ...prevProject, ...updates };
+
+      const newManager = updates.manager
+        ? { ...prevProject.manager, ...updates.manager }
+        : prevProject.manager;
+
+      const newProjectState: Project = {
+        ...prevProject,
+        ...updates,
+        manager: newManager,
+      };
+
+      return newProjectState;
     });
   };
 
@@ -339,7 +395,20 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                     <Select
                       value={project.manager.type}
                       onValueChange={(type) =>
-                        updateProject({ manager: { ...project.manager, type } })
+                        updateProject({
+                          manager: {
+                            ...project.manager,
+                            type,
+                            ...(type === "HybridPhaseManager" && {
+                              continuousPhases:
+                                project.manager.continuousPhases || [],
+                              minActionDelay:
+                                project.manager.minActionDelay ?? 5,
+                              maxActionDelay:
+                                project.manager.maxActionDelay ?? 10,
+                            }),
+                          },
+                        })
                       }
                     >
                       <SelectTrigger id="manager-type">
@@ -355,6 +424,79 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       </SelectContent>
                     </Select>
                   </div>
+                  {project.manager.type === "HybridPhaseManager" && (
+                    <>
+                      <div className="grid gap-2">
+                        <Label htmlFor="manager-continuous-phases">
+                          Continuous Phases (comma-separated)
+                        </Label>
+                        <Input
+                          id="manager-continuous-phases"
+                          value={project.manager.continuousPhasesString || ""}
+                          onChange={(e) =>
+                            updateProject({
+                              manager: {
+                                ...project.manager,
+                                continuousPhasesString: e.target.value,
+                                continuousPhases: parseCommaSeparatedNumbers(
+                                  e.target.value
+                                ),
+                              },
+                            })
+                          }
+                          placeholder="e.g., 1, 3, 5"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="manager-min-action-delay">
+                            Min Action Delay (seconds)
+                          </Label>
+                          <Input
+                            id="manager-min-action-delay"
+                            type="number"
+                            min="0"
+                            value={project.manager.minActionDelay ?? ""}
+                            onChange={(e) =>
+                              updateProject({
+                                manager: {
+                                  ...project.manager,
+                                  minActionDelay:
+                                    e.target.value === ""
+                                      ? undefined
+                                      : parseInt(e.target.value, 10),
+                                },
+                              })
+                            }
+                            placeholder="e.g., 5"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="manager-max-action-delay">
+                            Max Action Delay (seconds)
+                          </Label>
+                          <Input
+                            id="manager-max-action-delay"
+                            type="number"
+                            min="0"
+                            value={project.manager.maxActionDelay ?? ""}
+                            onChange={(e) =>
+                              updateProject({
+                                manager: {
+                                  ...project.manager,
+                                  maxActionDelay:
+                                    e.target.value === ""
+                                      ? undefined
+                                      : parseInt(e.target.value, 10),
+                                },
+                              })
+                            }
+                            placeholder="e.g., 10"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

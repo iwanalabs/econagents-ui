@@ -7,6 +7,7 @@ export interface ProjectYaml {
   agents: AgentYaml[];
   state: StateYaml;
   manager: ManagerYaml;
+  runner?: RunnerYaml;
   server_config_id?: string | null;
   prompt_partials?: PromptPartialYaml[];
   game_id?: number | null;
@@ -51,6 +52,23 @@ export interface StateYaml {
 
 export interface ManagerYaml {
   type: string;
+  [key: string]: any;
+}
+
+export interface RunnerYaml {
+  type?: string;
+  game_id?: number;
+  continuous_phases?: number[];
+  min_action_delay?: number;
+  max_action_delay?: number;
+  hostname?: string;
+  port?: number;
+  path?: string;
+  logs_dir?: string | null;
+  log_level?: string | null;
+  phase_transition_event?: string | null;
+  phase_identifier_key?: string | null;
+  observability_provider?: string;
   [key: string]: any;
 }
 

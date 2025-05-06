@@ -69,8 +69,8 @@ export async function exportToYaml(
           yaml += `      ${key}: ${JSON.stringify(value)}\n`;
         });
 
-      if (role.task_phases && role.task_phases.length > 0) {
-        yaml += `    task_phases: [${role.task_phases.join(", ")}]\n`;
+      if (role.taskPhases && role.taskPhases.length > 0) {
+        yaml += `    task_phases: [${role.taskPhases.join(", ")}]\n`;
       }
 
       if (role.prompts && Object.keys(role.prompts).length > 0) {
@@ -162,9 +162,9 @@ export async function exportToYaml(
       }
 
       if (field.events && field.events.length > 0) {
-        fieldYaml += `${indent}  events: [${field.events.map(e => `"${e}"`).join(", ")}]\n`;
+        fieldYaml += `${indent}  events: [${field.events.map((e) => `"${e}"`).join(", ")}]\n`;
       } else if (field.excludedEvents && field.excludedEvents.length > 0) {
-        fieldYaml += `${indent}  excluded_events: [${field.excludedEvents.map(e => `"${e}"`).join(", ")}]\n`;
+        fieldYaml += `${indent}  excluded_events: [${field.excludedEvents.map((e) => `"${e}"`).join(", ")}]\n`;
       }
 
       if (field.excludeFromMapping === true) {
@@ -213,15 +213,34 @@ export async function exportToYaml(
 
   // Runner
   yaml += "runner:\n";
+  yaml += `  game_id: 0\n`;
+
+  // Runner Type
   let runnerType = "TurnBasedGameRunner";
   if (project.manager.type === "HybridPhaseManager") {
     runnerType = "HybridGameRunner";
   } else if (project.manager.type === "TurnBasedPhaseManager") {
     runnerType = "TurnBasedGameRunner";
   }
-
-  yaml += `  game_id: 0\n`;
   yaml += `  type: "${runnerType}"\n`;
+  if (
+    project.manager.continuousPhases &&
+    project.manager.continuousPhases.length > 0
+  ) {
+    yaml += `  continuous_phases: [${project.manager.continuousPhases.join(
+      ", "
+    )}]\n`;
+
+    if (project.manager.maxActionDelay) {
+      yaml += `  max_action_delay: ${project.manager.maxActionDelay}\n`;
+    }
+
+    if (project.manager.minActionDelay) {
+      yaml += `  min_action_delay: ${project.manager.minActionDelay}\n`;
+    }
+  }
+
+  // Server Config
   yaml += `  hostname: "${serverConfig.hostname}"\n`;
   yaml += `  port: ${serverConfig.port}\n`;
   yaml += `  path: "${serverConfig.path}"\n`;

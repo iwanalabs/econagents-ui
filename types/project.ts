@@ -33,7 +33,7 @@ export interface AgentRole {
     [key: string]: any;
   };
   prompts: Record<string, string>;
-  task_phases?: number[];
+  taskPhases?: number[];
 }
 
 export interface Agent {
@@ -61,6 +61,10 @@ export interface State {
 
 export interface Manager {
   type: string;
+  continuousPhases?: number[];
+  continuousPhasesString?: string;
+  minActionDelay?: number;
+  maxActionDelay?: number;
   [key: string]: any;
 }
 
