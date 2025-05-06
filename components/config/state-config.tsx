@@ -802,10 +802,10 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                               const value = e.target.value;
                               setCurrentField({
                                 ...currentField,
-                                events: value,
+                                events: value.split(",").map((s) => s.trim()),
                                 excludedEvents: value
                                   ? []
-                                  : currentField.excludedEvents, // Clear excluded if events is filled
+                                  : currentField.excludedEvents,
                               });
                             }}
                             placeholder="e.g., event1, event2"
@@ -831,8 +831,10 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                               const value = e.target.value;
                               setCurrentField({
                                 ...currentField,
-                                excludedEvents: value,
-                                events: value ? [] : currentField.events, // Clear events if excluded_events is filled
+                                excludedEvents: value
+                                  .split(",")
+                                  .map((s) => s.trim()),
+                                events: value ? [] : currentField.events,
                               });
                             }}
                             placeholder="e.g., event3, event4"
