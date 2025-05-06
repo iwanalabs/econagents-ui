@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -42,7 +44,6 @@ jobs:
         id: setup_pages
         uses: actions/configure-pages@v5
 
-      # Add this step to get the Git tag
       - name: Get latest git tag
         id: get_tag
         run: echo "APP_VERSION=$(git describe --tags --abbrev=0 || echo '0.0.0-dev')" >> $GITHUB_ENV
