@@ -37,8 +37,11 @@ export function ImportServerConfigsModal({
 
   const [
     existingServerConfigs,
-    ,
-    addServerConfig,,
+    setServerConfigs,
+    addServerConfig,
+    updateServerConfig,
+    deleteServerConfig,
+    addMultipleServerConfigs,
   ] = useServerConfigs();
   const { toast } = useToast();
 
@@ -108,25 +111,28 @@ export function ImportServerConfigsModal({
 
     const existingIds = new Set(existingServerConfigs.map((c) => c.id));
     let importedCount = 0;
-    let skippedCount = 0;
+    const configsToAdd: ServerConfig[] = [];
 
     parsedConfigs.forEach((importedConfig) => {
       let finalId = importedConfig.id;
-      // Ensure ID is unique, generate a new one if it's a duplicate or was just generated and happens to collide (unlikely)
       if (existingIds.has(finalId)) {
-        console.warn(`ID conflict for ${importedConfig.name} (ID: ${finalId}). Generating new ID.`);
+        console.warn(
+          `ID conflict for ${importedConfig.name} (ID: ${finalId}). Generating new ID.`,
+        );
         finalId = crypto.randomUUID();
       }
-      
-      const configToAdd: ServerConfig = { ...importedConfig, id: finalId };
-      addServerConfig(configToAdd);
-      existingIds.add(finalId); // Add to set to prevent collision with items in the same import batch
-      importedCount++;
+      configsToAdd.push({ ...importedConfig, id: finalId });
+      existingIds.add(finalId); // Add to set to prevent collision with other items in the same batch
     });
+
+    if (configsToAdd.length > 0) {
+      addMultipleServerConfigs(configsToAdd);
+      importedCount = configsToAdd.length;
+    }
 
     toast({
       title: "Import Successful",
-      description: `${importedCount} server configuration(s) imported. ${skippedCount > 0 ? `${skippedCount} skipped due to issues.` : ""}`,
+      description: `${importedCount} server configuration(s) imported.`,
     });
     onClose();
   };

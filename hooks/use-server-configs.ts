@@ -9,6 +9,7 @@ export function useServerConfigs(): [
   (newConfig: ServerConfig) => void,
   (updatedConfig: ServerConfig) => void,
   (id: string) => void,
+  (newConfigs: ServerConfig[]) => void,
 ] {
   const [serverConfigs, setServerConfigsState] = useState<ServerConfig[]>([]);
 
@@ -82,6 +83,14 @@ export function useServerConfigs(): [
     [serverConfigs, setServerConfigs]
   );
 
+  const addMultipleServerConfigs = useCallback(
+    (newConfigs: ServerConfig[]) => {
+      // Read current value directly from state to avoid stale closure issues
+      setServerConfigs([...serverConfigs, ...newConfigs]);
+    },
+    [serverConfigs, setServerConfigs]
+  );
+
   const updateServerConfig = useCallback(
     (updatedConfig: ServerConfig) => {
       // Read current value directly from state
@@ -108,5 +117,6 @@ export function useServerConfigs(): [
     addServerConfig,
     updateServerConfig,
     deleteServerConfig,
+    addMultipleServerConfigs,
   ];
 }
