@@ -69,6 +69,10 @@ export async function exportToYaml(
           yaml += `      ${key}: ${JSON.stringify(value)}\n`;
         });
 
+      if (role.task_phases && role.task_phases.length > 0) {
+        yaml += `    task_phases: [${role.task_phases.join(", ")}]\n`;
+      }
+
       if (role.prompts && Object.keys(role.prompts).length > 0) {
         yaml += "    prompts:\n";
         Object.entries(role.prompts).forEach(([key, value]) => {

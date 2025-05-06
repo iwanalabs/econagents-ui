@@ -33,6 +33,7 @@ export interface AgentRole {
     [key: string]: any;
   };
   prompts: Record<string, string>;
+  task_phases?: number[];
 }
 
 export interface Agent {

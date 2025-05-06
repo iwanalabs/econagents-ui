@@ -23,6 +23,7 @@ export interface AgentRoleYaml {
     [key: string]: any;
   };
   prompts: Record<string, string>;
+  task_phases?: number[];
 }
 
 export interface AgentYaml {

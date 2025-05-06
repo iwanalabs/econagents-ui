@@ -67,6 +67,23 @@ interface PhasePrompt {
   user: string;
 }
 
+// Helper function to parse comma-separated numbers
+const parseCommaSeparatedNumbers = (str: string | undefined): number[] => {
+  if (!str || str.trim() === "") return [];
+  return str
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s !== "")
+    .map(Number)
+    .filter((n) => !isNaN(n));
+};
+
+// Helper function to convert array of numbers to comma-separated string
+const numbersToCommaSeparatedString = (nums: number[] | undefined): string => {
+  if (!nums || nums.length === 0) return "";
+  return nums.join(", ");
+};
+
 export function AgentRolesConfig({
   agentRoles,
   onChange,
@@ -78,7 +95,10 @@ export function AgentRolesConfig({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [currentRole, setCurrentRole] = useState<
-    Omit<AgentRole, "prompts"> & { prompts: Record<string, string> }
+    Omit<AgentRole, "prompts" | "task_phases"> & {
+      prompts: Record<string, string>;
+      task_phases_string?: string; // For input field
+    }
   >({
     roleId: 0,
     name: "",
@@ -87,6 +107,8 @@ export function AgentRolesConfig({
       modelName: "gpt-4o",
     },
     prompts: { system: "", user: "" },
+    task_phases_string: "",
+    task_phases_excluded_string: "",
   });
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");
@@ -214,6 +236,8 @@ export function AgentRolesConfig({
       llmType: "ChatOpenAI",
       llmParams: { modelName: "gpt-4o" },
       prompts: { system: "", user: "" },
+      task_phases_string: "",
+      task_phases_excluded_string: "",
     });
     setPhasePrompts([]);
     clearRefs();
@@ -236,6 +260,7 @@ export function AgentRolesConfig({
     setCurrentRole({
       ...roleToEdit,
       prompts: defaultPrompts,
+      task_phases_string: numbersToCommaSeparatedString(roleToEdit.task_phases),
     });
     setPhasePrompts(parsePhasePrompts(roleToEdit.prompts || {}));
     clearRefs();
@@ -262,8 +287,12 @@ export function AgentRolesConfig({
     if (!currentRole.name) return;
 
     const finalRole: AgentRole = {
-      ...currentRole,
+      roleId: currentRole.roleId,
+      name: currentRole.name,
+      llmType: currentRole.llmType,
+      llmParams: currentRole.llmParams,
       prompts: combinePrompts(), // Combine prompts before saving
+      task_phases: parseCommaSeparatedNumbers(currentRole.task_phases_string),
     };
 
     let newRoles: AgentRole[];
@@ -373,11 +402,16 @@ export function AgentRolesConfig({
                   {role.llmType} - {role.llmParams.modelName}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pb-2">
-                <div className="text-sm">
+              <CardContent className="pb-2 text-xs space-y-1">
+                <div>
                   <strong>Prompts:</strong>{" "}
                   {Object.keys(role.prompts || {}).length} defined
                 </div>
+                {role.task_phases && role.task_phases.length > 0 && (
+                  <div>
+                    <strong>Task Phases:</strong> {role.task_phases.join(", ")}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="flex justify-end space-x-2">
                 <Button
@@ -435,7 +469,7 @@ export function AgentRolesConfig({
                   {/* Remove the role ID input field */}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="llm-type">LLM Type</Label>
                     <Select
@@ -468,6 +502,23 @@ export function AgentRolesConfig({
                         })
                       }
                       placeholder="e.g., gpt-4o"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="task-phases">
+                      Task Phases (comma-separated)
+                    </Label>
+                    <Input
+                      id="task-phases"
+                      value={currentRole.task_phases_string || ""}
+                      onChange={(e) =>
+                        setCurrentRole({
+                          ...currentRole,
+                          task_phases_string: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 1, 2, 5"
                     />
                   </div>
                 </div>

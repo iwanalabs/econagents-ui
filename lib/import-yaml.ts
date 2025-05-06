@@ -76,6 +76,7 @@ export function importFromYaml(
         ...otherParams,
       },
       prompts: parsePrompts(role.prompts),
+      task_phases: Array.isArray(role.task_phases) ? role.task_phases.filter((tp: any) => typeof tp === 'number') : [],
     };
   });
 
