@@ -15,12 +15,16 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { PlusIcon, EditIcon, Trash2Icon } from "lucide-react";
+// Update lucide-react imports
+import { PlusIcon, EditIcon, Trash2Icon, FileUpIcon, FileDownIcon } from "lucide-react";
 import { useServerConfigs } from "@/hooks/use-server-configs";
 import { ServerConfigForm } from "@/components/config/server-config-form";
 import type { ServerConfig } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+// Add new imports
+import { exportServerConfigsToYaml } from "@/lib/export-server-configs-yaml";
+import { ImportServerConfigsModal } from "@/components/import-server-configs-modal";
 
 interface ServerManagementModalProps {
   isOpen: boolean;
@@ -50,6 +54,7 @@ export function ServerManagementModal({
   const [editingConfig, setEditingConfig] = useState<ServerConfig | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { toast } = useToast();
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleAddNew = () => {
     setEditingConfig(createDefaultServerConfig());
@@ -93,10 +98,44 @@ export function ServerManagementModal({
     setEditingConfig(null);
   };
 
+  const handleExportAll = async () => {
+    if (serverConfigs.length === 0) {
+      toast({
+        title: "Export Aborted",
+        description: "No server configurations to export.",
+        variant: "default",
+      });
+      return;
+    }
+    try {
+      const result = await exportServerConfigsToYaml(serverConfigs);
+      if (result.success) {
+        toast({
+          title: "Export Successful",
+          description: result.message || "Server configurations exported.",
+        });
+      } else if (result.message !== "Export cancelled by user.") { // Don't show error for user cancel
+        toast({
+          title: "Export Failed",
+          description: result.message || "Could not export server configurations.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Export Error",
+        description: "An unexpected error occurred during export.",
+        variant: "destructive",
+      });
+      console.error("Export error:", error);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setIsFormOpen(false);
       setEditingConfig(null);
+      setIsImportModalOpen(false); // Also close import modal if main modal closes
     }
   }, [isOpen]);
 
@@ -151,18 +190,37 @@ export function ServerManagementModal({
               )}
             </div>
           </ScrollArea>
-          <DialogFooter className="mt-4 border-t pt-4">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            <Button onClick={handleAddNew} className="gap-2">
-              <PlusIcon className="h-4 w-4" /> Add New Configuration
-            </Button>
+          <DialogFooter className="mt-4 border-t pt-4 flex justify-between">
+            <div>
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsImportModalOpen(true)}
+                className="gap-2"
+              >
+                <FileUpIcon className="h-4 w-4" /> Import
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleExportAll}
+                className="gap-2"
+                disabled={serverConfigs.length === 0}
+              >
+                <FileDownIcon className="h-4 w-4" /> Export All
+              </Button>
+              <Button onClick={handleAddNew} className="gap-2">
+                <PlusIcon className="h-4 w-4" /> Add New
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Form Dialog */}
+      {/* Form Dialog for Add/Edit */}
       <Dialog open={isFormOpen} onOpenChange={handleFormClose}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
@@ -196,6 +254,12 @@ export function ServerManagementModal({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Import Server Configs Modal */}
+      <ImportServerConfigsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+      />
     </>
   );
 }
