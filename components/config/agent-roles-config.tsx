@@ -108,7 +108,6 @@ export function AgentRolesConfig({
     },
     prompts: { system: "", user: "" },
     task_phases_string: "",
-    task_phases_excluded_string: "",
   });
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");

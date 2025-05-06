@@ -39,6 +39,8 @@ export interface StateFieldYaml {
   event_key?: string;
   exclude_from_mapping?: boolean;
   optional?: boolean;
+  events?: string[];
+  excluded_events?: string[];
 }
 
 export interface StateYaml {

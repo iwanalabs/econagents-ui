@@ -161,6 +161,12 @@ export async function exportToYaml(
         fieldYaml += `${indent}  event_key: "${field.eventKey}"\n`;
       }
 
+      if (field.events && field.events.length > 0) {
+        fieldYaml += `${indent}  events: [${field.events.map(e => `"${e}"`).join(", ")}]\n`;
+      } else if (field.excludedEvents && field.excludedEvents.length > 0) {
+        fieldYaml += `${indent}  excluded_events: [${field.excludedEvents.map(e => `"${e}"`).join(", ")}]\n`;
+      }
+
       if (field.excludeFromMapping === true) {
         fieldYaml += `${indent}  exclude_from_mapping: true\n`;
       }

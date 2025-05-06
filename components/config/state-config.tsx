@@ -29,6 +29,9 @@ import {
   KeyRound,
   Link2,
   Variable,
+  CalendarDays,
+  CalendarX2,
+  List,
 } from "lucide-react";
 import type { State, StateField, StateFieldType } from "@/types/project";
 
@@ -130,6 +133,8 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
     name: "",
     type: "str",
     default: "",
+    events: [],
+    excludedEvents: [],
   });
   const [defaultValidationError, setDefaultValidationError] = useState<
     string | null
@@ -140,6 +145,8 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
       name: "",
       type: "str",
       default: "",
+      events: [],
+      excludedEvents: [],
     });
     setEditingIndex(null);
     setIsDialogOpen(true);
@@ -147,7 +154,19 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
   };
 
   const handleEditField = (field: StateField, index: number) => {
-    setCurrentField({ ...field });
+    const initialCurrentField = { ...field };
+
+    const hasEvents =
+      initialCurrentField.events && initialCurrentField.events.length > 0;
+    const hasExcludedEvents =
+      initialCurrentField.excludedEvents &&
+      initialCurrentField.excludedEvents.length > 0;
+
+    if (hasEvents && hasExcludedEvents) {
+      initialCurrentField.excludedEvents = [];
+    }
+
+    setCurrentField(initialCurrentField);
     setEditingIndex(index);
     setIsDialogOpen(true);
     setDefaultValidationError(null);
@@ -204,6 +223,50 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
     // Work on a copy to modify before saving
     const fieldToSave: StateField = { ...currentField };
+
+    // Process events and excluded_events: convert comma-separated strings to arrays
+    // Ensure only one of them is populated.
+    if (typeof fieldToSave.events === "string") {
+      const eventsArray = (fieldToSave.events as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s);
+      if (eventsArray.length > 0) {
+        fieldToSave.events = eventsArray;
+        delete fieldToSave.excludedEvents; // Ensure excluded_events is not set if events is
+      } else {
+        delete fieldToSave.events;
+      }
+    } else if (
+      Array.isArray(fieldToSave.events) &&
+      fieldToSave.events.length === 0
+    ) {
+      delete fieldToSave.events;
+    }
+
+    if (typeof fieldToSave.excludedEvents === "string") {
+      const excludedEventsArray = (fieldToSave.excludedEvents as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s);
+      if (excludedEventsArray.length > 0) {
+        if (fieldToSave.events && fieldToSave.events.length > 0) {
+          setDefaultValidationError(
+            "Cannot set both Events and Excluded Events."
+          );
+          return;
+        }
+        fieldToSave.excludedEvents = excludedEventsArray;
+        delete fieldToSave.events; // Ensure events is not set if excluded_events is
+      } else {
+        delete fieldToSave.excludedEvents;
+      }
+    } else if (
+      Array.isArray(fieldToSave.excludedEvents) &&
+      fieldToSave.excludedEvents.length === 0
+    ) {
+      delete fieldToSave.excludedEvents;
+    }
 
     let finalDefaultValue: any = fieldToSave.default;
     const isNullOrUndefined =
@@ -401,7 +464,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
           return (
             <div
               key={field.name}
-              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-3 rounded-md border bg-card p-3 shadow-sm"
+              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] items-center gap-x-3 rounded-md border bg-card p-3 shadow-sm"
             >
               {/* Lock Icon (Column 1) */}
               <div className="flex justify-center items-center w-5">
@@ -434,12 +497,12 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
 
               {/* Default Value (Column 4) */}
               <span
-                className="inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate"
+                className="inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate"
                 title={`Default: ${
                   field.type === "MarketState"
                     ? "Not applicable"
                     : field.default === undefined || field.default === null
-                      ? "None"
+                      ? "-"
                       : JSON.stringify(field.default)
                 }`}
               >
@@ -449,17 +512,17 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     ? "Not applicable"
                     : field.default !== undefined && field.default !== null
                       ? JSON.stringify(field.default)
-                      : "None"}
+                      : "-"}
                 </span>
               </span>
 
               {/* Event Key (Column 5) */}
               <span
-                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[120px] truncate`}
-                title={`Event Key: ${field.eventKey || "None"}`}
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate`}
+                title={`Event Key: ${field.eventKey || "-"}`}
               >
                 <KeyRound className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                <span className="truncate">{field.eventKey || "None"}</span>
+                <span className="truncate">{field.eventKey || "-"}</span>
               </span>
 
               {/* Exclude Mapping (Column 6) */}
@@ -469,6 +532,21 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
               >
                 <Link2 className="h-4 w-4 mr-1.5 flex-shrink-0" />
                 {field.excludeFromMapping ? "N" : "Y"}
+              </span>
+
+              {/* Events (Column 7) */}
+              <span
+                className={`inline-flex items-center justify-start rounded-sm border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 w-[80px] truncate`}
+                title={`Events: ${field.events && field.events.length > 0 ? "Y" : field.excludedEvents && field.excludedEvents.length > 0 ? "N" : "-"}`}
+              >
+                <List className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                <span className="truncate">
+                  {field.events && field.events.length > 0
+                    ? "Y"
+                    : field.excludedEvents && field.excludedEvents.length > 0
+                      ? "N"
+                      : "-"}
+                </span>
               </span>
 
               {/* Action Buttons (Column 7) */}
@@ -693,7 +771,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                     </div>
                   </div>
 
-                  {/* Always show Event Key and Exclude Mapping */}
                   <>
                     <div className="grid gap-2">
                       <Label htmlFor="event-key">Event Key</Label>
@@ -709,6 +786,65 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                         placeholder="e.g., round"
                       />
                     </div>
+
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="field-events">Events</Label>
+                          <Input
+                            id="field-events"
+                            value={
+                              Array.isArray(currentField.events)
+                                ? currentField.events.join(", ")
+                                : currentField.events || ""
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setCurrentField({
+                                ...currentField,
+                                events: value,
+                                excludedEvents: value
+                                  ? []
+                                  : currentField.excludedEvents, // Clear excluded if events is filled
+                              });
+                            }}
+                            placeholder="e.g., event1, event2"
+                            disabled={
+                              !!(Array.isArray(currentField.excludedEvents)
+                                ? currentField.excludedEvents.join(", ")
+                                : currentField.excludedEvents)
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="field-excluded-events">
+                            Excluded Events
+                          </Label>
+                          <Input
+                            id="field-excluded-events"
+                            value={
+                              Array.isArray(currentField.excludedEvents)
+                                ? currentField.excludedEvents.join(", ")
+                                : currentField.excludedEvents || ""
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setCurrentField({
+                                ...currentField,
+                                excludedEvents: value,
+                                events: value ? [] : currentField.events, // Clear events if excluded_events is filled
+                              });
+                            }}
+                            placeholder="e.g., event3, event4"
+                            disabled={
+                              !!(Array.isArray(currentField.events)
+                                ? currentField.events.join(", ")
+                                : currentField.events)
+                            }
+                          />
+                        </div>
+                      </div>
+                    </>
 
                     <div className="flex items-center space-x-2">
                       <Checkbox

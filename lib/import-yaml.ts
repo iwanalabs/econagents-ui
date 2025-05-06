@@ -40,6 +40,8 @@ function mapStateField(yamlField: Record<string, any>): StateField {
     eventKey: yamlField.event_key,
     excludeFromMapping: yamlField.exclude_from_mapping,
     optional: yamlField.optional ?? false,
+    events: Array.isArray(yamlField.events) ? yamlField.events.filter((e: any) => typeof e === 'string') : undefined,
+    excludedEvents: Array.isArray(yamlField.excluded_events) ? yamlField.excluded_events.filter((e: any) => typeof e === 'string') : undefined,
   };
 }
 

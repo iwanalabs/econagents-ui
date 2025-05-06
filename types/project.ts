@@ -49,6 +49,8 @@ export interface StateField {
   eventKey?: string;
   excludeFromMapping?: boolean;
   optional?: boolean;
+  events?: string[];
+  excludedEvents?: string[];
 }
 
 export interface State {
