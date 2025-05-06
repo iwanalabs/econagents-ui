@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/toaster";
+import AppVersionValidator from "@/components/app-version-validator";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <AppVersionValidator />
         </ThemeProvider>
       </body>
     </html>
