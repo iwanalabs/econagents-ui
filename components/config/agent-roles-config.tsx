@@ -115,7 +115,8 @@ export function AgentRolesConfig({
   const [inserterVisibility, setInserterVisibility] = useState<
     Record<string, { state: boolean; partials: boolean }>
   >({});
-
+  const [roleIdError, setRoleIdError] = useState<string | null>(null);
+  
   const stateForInserter: State = state;
 
   const contentRefs = useRef<{
@@ -243,8 +244,7 @@ export function AgentRolesConfig({
     setActiveMainTab("basic");
     setPreviewModes({}); // Reset preview modes
     setInserterVisibility({}); // Reset inserter visibility
-    setPreviewModes({}); // Reset preview modes
-    setInserterVisibility({}); // Reset inserter visibility
+    setRoleIdError(null); // Reset roleIdError
     setIsDialogOpen(true);
   };
 
@@ -264,6 +264,7 @@ export function AgentRolesConfig({
     clearRefs();
     setEditingIndex(index);
     setActiveMainTab("basic");
+    setRoleIdError(null); // Reset roleIdError
     setIsDialogOpen(true);
   };
 
@@ -283,9 +284,26 @@ export function AgentRolesConfig({
 
   const handleSaveRole = () => {
     if (!currentRole.name) return;
-
+    setRoleIdError(null); // Clear previous errors
+  
+    const newRoleId = currentRole.roleId; // This is already a number from the input's onChange
+  
+    if (isNaN(newRoleId) || newRoleId <= 0) {
+      setRoleIdError("Role ID must be a positive integer.");
+      return;
+    }
+  
+    // Uniqueness check for new roles (editingIndex === null)
+    // For existing roles (editingIndex !== null), ID is disabled and shouldn't change.
+    if (editingIndex === null) {
+      if (agentRoles.some(role => role.roleId === newRoleId)) {
+        setRoleIdError(`Role ID ${newRoleId} is already in use. Please choose a unique ID.`);
+        return;
+      }
+    }
+  
     const finalRole: AgentRole = {
-      roleId: currentRole.roleId,
+      roleId: newRoleId,
       name: currentRole.name,
       llmType: currentRole.llmType,
       llmParams: currentRole.llmParams,
@@ -454,6 +472,24 @@ export function AgentRolesConfig({
               <div className="space-y-6 py-4 max-h-[75vh] overflow-y-auto px-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
+                    <Label htmlFor="role-id">Role ID</Label>
+                    <Input
+                      id="role-id"
+                      type="number"
+                      value={currentRole.roleId === 0 && editingIndex === null ? "" : currentRole.roleId.toString()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const numVal = parseInt(val, 10);
+                        setCurrentRole({ ...currentRole, roleId: isNaN(numVal) ? 0 : numVal });
+                        setRoleIdError(null);
+                      }}
+                      placeholder="e.g., 1"
+                      disabled={editingIndex !== null}
+                      min="1"
+                    />
+                    {roleIdError && <p className="text-xs text-destructive mt-1">{roleIdError}</p>}
+                  </div>
+                  <div className="grid gap-2">
                     <Label htmlFor="role-name">Role Name</Label>
                     <Input
                       id="role-name"
@@ -464,7 +500,6 @@ export function AgentRolesConfig({
                       placeholder="e.g., Prisoner"
                     />
                   </div>
-                  {/* Remove the role ID input field */}
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -1190,7 +1225,7 @@ export function AgentRolesConfig({
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveRole} disabled={!currentRole.name}>
+            <Button onClick={handleSaveRole} disabled={!currentRole.name || !!roleIdError}>
               Save
             </Button>
           </DialogFooter>
