@@ -94,21 +94,24 @@ export function AgentRolesConfig({
 }: AgentRolesConfigProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // Update currentRole to store llmParamsModelName separately
   const [currentRole, setCurrentRole] = useState<
-    Omit<AgentRole, "prompts" | "taskPhases"> & {
+    Omit<AgentRole, "prompts" | "taskPhases" | "llmParams"> & {
       prompts: Record<string, string>;
       taskPhasesString?: string; 
+      llmParamsModelName: string; // Store only modelName here
     }
   >({
     roleId: 0,
     name: "",
     llmType: "ChatOpenAI",
-    llmParams: {
-      modelName: "gpt-4o",
-    },
+    llmParamsModelName: "gpt-4o", // Default modelName
     prompts: { system: "", user: "" },
     taskPhasesString: "",
   });
+  // Add state for dynamic LLM parameters
+  const [dynamicLlmParams, setDynamicLlmParams] = useState<Array<{ id: string; key: string; value: string }>>([]);
+
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");
   const [previewModes, setPreviewModes] = useState<Record<string, boolean>>({});
@@ -234,10 +237,11 @@ export function AgentRolesConfig({
           : 1,
       name: "",
       llmType: "ChatOpenAI",
-      llmParams: { modelName: "gpt-4o" },
+      llmParamsModelName: "gpt-4o", // Set modelName here
       prompts: { system: "", user: "" },
       taskPhasesString: "",
     });
+    setDynamicLlmParams([]); // Initialize dynamic params as empty
     setPhasePrompts([]);
     clearRefs();
     setEditingIndex(null);
@@ -256,10 +260,22 @@ export function AgentRolesConfig({
     };
 
     setCurrentRole({
-      ...roleToEdit,
+      ...roleToEdit, // Spreads original llmParams, but llmParamsModelName below takes precedence for its part
       prompts: defaultPrompts,
       taskPhasesString: numbersToCommaSeparatedString(roleToEdit.taskPhases),
+      llmParamsModelName: roleToEdit.llmParams.modelName, // Explicitly set modelName
     });
+
+    // Populate dynamicLlmParams from roleToEdit.llmParams (excluding modelName)
+    const paramsForUi = Object.entries(roleToEdit.llmParams)
+      .filter(([key]) => key !== 'modelName')
+      .map(([key, value], i) => ({
+        id: `param-${roleToEdit.roleId}-${i}-${Date.now()}`, // unique id for react key
+        key,
+        value: String(value ?? ''), // Store as string for input, handle null/undefined
+      }));
+    setDynamicLlmParams(paramsForUi);
+
     setPhasePrompts(parsePhasePrompts(roleToEdit.prompts || {}));
     clearRefs();
     setEditingIndex(index);
@@ -302,11 +318,36 @@ export function AgentRolesConfig({
       }
     }
   
+    // Construct final llmParams
+    const finalLlmParams: Record<string, any> = { modelName: currentRole.llmParamsModelName };
+    dynamicLlmParams.forEach(param => {
+      const key = param.key.trim();
+      if (key) {
+        let parsedValue: any = param.value;
+        const trimmedValue = param.value.trim();
+        
+        if (trimmedValue === '') {
+            // Keep as empty string or handle as null if appropriate for your backend
+            // For now, let's keep it as an empty string if user explicitly typed it.
+            // If it was initially null/undefined and became an empty string, it's still empty.
+             parsedValue = "";
+        } else if (!isNaN(Number(trimmedValue))) {
+            parsedValue = Number(trimmedValue);
+        } else if (trimmedValue.toLowerCase() === 'true') {
+            parsedValue = true;
+        } else if (trimmedValue.toLowerCase() === 'false') {
+            parsedValue = false;
+        }
+        // Otherwise, it remains a string (param.value)
+        finalLlmParams[key] = parsedValue;
+      }
+    });
+  
     const finalRole: AgentRole = {
       roleId: newRoleId,
       name: currentRole.name,
       llmType: currentRole.llmType,
-      llmParams: currentRole.llmParams,
+      llmParams: finalLlmParams, // Use the constructed llmParams
       prompts: combinePrompts(), // Combine prompts before saving
       taskPhases: parseCommaSeparatedNumbers(currentRole.taskPhasesString),
     };
@@ -524,14 +565,11 @@ export function AgentRolesConfig({
                     <Label htmlFor="model-name">Model Name</Label>
                     <Input
                       id="model-name"
-                      value={currentRole.llmParams.modelName}
+                      value={currentRole.llmParamsModelName} // Use llmParamsModelName
                       onChange={(e) =>
                         setCurrentRole({
                           ...currentRole,
-                          llmParams: {
-                            ...currentRole.llmParams,
-                            modelName: e.target.value,
-                          },
+                          llmParamsModelName: e.target.value, // Update llmParamsModelName
                         })
                       }
                       placeholder="e.g., gpt-4o"
@@ -560,48 +598,61 @@ export function AgentRolesConfig({
                   <div className="flex justify-between items-center">
                     <Label>Model Parameters</Label>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="temperature">Temperature</Label>
-                      <Input
-                        id="temperature"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="2"
-                        value={currentRole.llmParams.temperature || 0.7}
-                        onChange={(e) =>
-                          setCurrentRole({
-                            ...currentRole,
-                            llmParams: {
-                              ...currentRole.llmParams,
-                              temperature:
-                                Number.parseFloat(e.target.value) || 0,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="top-p">Top P</Label>
-                      <Input
-                        id="top-p"
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="1"
-                        value={currentRole.llmParams.topP || 1}
-                        onChange={(e) =>
-                          setCurrentRole({
-                            ...currentRole,
-                            llmParams: {
-                              ...currentRole.llmParams,
-                              topP: Number.parseFloat(e.target.value) || 0,
-                            },
-                          })
-                        }
-                      />
-                    </div>
+                  {/* Container for dynamic LLM parameters */}
+                  <div className="space-y-3 rounded-md border p-4">
+                    {dynamicLlmParams.map((param, index) => (
+                      <div key={param.id} className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          placeholder="Parameter Name"
+                          value={param.key}
+                          onChange={(e) => {
+                            const newDynamicParams = [...dynamicLlmParams];
+                            newDynamicParams[index].key = e.target.value;
+                            setDynamicLlmParams(newDynamicParams);
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="text"
+                          placeholder="Parameter Value"
+                          value={param.value}
+                          onChange={(e) => {
+                            const newDynamicParams = [...dynamicLlmParams];
+                            newDynamicParams[index].value = e.target.value;
+                            setDynamicLlmParams(newDynamicParams);
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newDynamicParams = dynamicLlmParams.filter(p => p.id !== param.id);
+                            setDynamicLlmParams(newDynamicParams);
+                          }}
+                          className="text-destructive hover:bg-destructive/10"
+                          aria-label="Remove LLM parameter"
+                        >
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button" // Prevent form submission if it's inside a form
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDynamicLlmParams([
+                          ...dynamicLlmParams,
+                          { id: `new-param-${Date.now()}`, key: "", value: "" },
+                        ]);
+                      }}
+                      className="mt-2 gap-1 text-xs"
+                    >
+                      <PlusIcon className="h-3 w-3" />
+                      Add LLM Parameter
+                    </Button>
                   </div>
                 </div>
               </div>

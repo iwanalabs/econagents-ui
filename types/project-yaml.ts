@@ -19,8 +19,6 @@ export interface AgentRoleYaml {
   llm_type: string;
   llm_params: {
     model_name: string;
-    temperature?: number;
-    top_p?: number;
     [key: string]: any;
   };
   prompts: Record<string, string>;

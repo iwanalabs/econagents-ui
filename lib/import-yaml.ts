@@ -68,7 +68,7 @@ export function importFromYaml(
 
   // Map Agent Roles
   const agentRoles: AgentRole[] = (doc.agent_roles || []).map((role: any) => {
-    const { model_name, temperature, top_p, ...otherParams } =
+    const { model_name, ...otherParams } =
       role.llm_params || {};
 
     return {
@@ -77,9 +77,7 @@ export function importFromYaml(
       llmType: role.llm_type,
       llmParams: {
         modelName: model_name || "unknown",
-        temperature: temperature,
-        topP: top_p,
-        ...otherParams,
+        ...otherParams, // temperature, topP, and any other params will be included here
       },
       prompts: parsePrompts(role.prompts),
       taskPhases: Array.isArray(role.task_phases)

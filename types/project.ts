@@ -28,8 +28,6 @@ export interface AgentRole {
   llmType: string;
   llmParams: {
     modelName: string;
-    temperature?: number;
-    topP?: number;
     [key: string]: any;
   };
   prompts: Record<string, string>;

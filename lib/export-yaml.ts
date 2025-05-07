@@ -49,24 +49,20 @@ export async function exportToYaml(
       yaml += "    llm_params:\n";
       yaml += `      model_name: "${role.llmParams.modelName}"\n`;
 
-      if (
-        role.llmParams.temperature !== undefined &&
-        role.llmParams.temperature !== null
-      ) {
-        yaml += `      temperature: ${role.llmParams.temperature}\n`;
-      }
-      if (role.llmParams.topP !== undefined && role.llmParams.topP !== null) {
-        yaml += `      top_p: ${role.llmParams.topP}\n`;
-      }
+      // Iterate over all other llmParams (excluding modelName)
       Object.entries(role.llmParams)
         .filter(
           ([key]) =>
-            !["modelName", "temperature", "topP"].includes(key) &&
+            key !== "modelName" &&
             role.llmParams[key] !== undefined &&
             role.llmParams[key] !== null
         )
         .forEach(([key, value]) => {
-          yaml += `      ${key}: ${JSON.stringify(value)}\n`;
+          if (typeof value === 'number') {
+            yaml += `      ${key}: ${value}\n`;
+          } else {
+            yaml += `      ${key}: ${JSON.stringify(value)}\n`;
+          }
         });
 
       if (role.taskPhases && role.taskPhases.length > 0) {
