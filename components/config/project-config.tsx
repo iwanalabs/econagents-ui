@@ -90,7 +90,9 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     if (!project || !project.manager) return;
 
     if (project.manager.type === "HybridPhaseManager") {
-      const expectedString = (project.manager.continuousPhases || []).join(", ");
+      const expectedString = (project.manager.continuousPhases || []).join(
+        ", "
+      );
       if (project.manager.continuousPhasesString !== expectedString) {
         setProject((prevProject) => {
           if (!prevProject || !prevProject.manager) return prevProject;
@@ -107,7 +109,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
       if (project.manager.continuousPhasesString !== undefined) {
         setProject((prevProject) => {
           if (!prevProject || !prevProject.manager) return prevProject;
-          const { continuousPhasesString, ...restManager } = prevProject.manager;
+          const { continuousPhasesString, ...restManager } =
+            prevProject.manager;
           return {
             ...prevProject,
             manager: restManager,
@@ -373,15 +376,9 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                     </Select>
                     {serverConfigs.length === 0 && (
                       <p className="text-xs text-muted-foreground">
-                        Please create a server configuration first via the
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={() => router.push("/servers")}
-                        >
-                          Manage Servers
-                        </Button>
-                        button on the dashboard.
+                        Please create a server configuration first via the{" "}
+                        <span className="font-bold">Manage Servers</span> button
+                        on the dashboard.
                       </p>
                     )}
                     {!project.serverConfigId && serverConfigs.length > 0 && (

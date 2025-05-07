@@ -105,7 +105,7 @@ export function ImportProjectModal({
             setSelectedServerConfigId(defaultId);
             tryParseYaml(content, defaultId);
           } else {
-             setError("Please select a server configuration.");
+            setError("Please select a server configuration.");
           }
         };
         reader.onerror = () => {
@@ -122,14 +122,14 @@ export function ImportProjectModal({
   };
 
   const handleServerConfigChange = (value: string) => {
-     setSelectedServerConfigId(value || null);
-     // Re-parse if file content exists and a new server is selected
-     if (fileContent && value) {
-       tryParseYaml(fileContent, value);
-     } else if (!value) {
-       setParsedProjectData(null); // Clear parsed data if server config is deselected
-       setError("Please select a server configuration.");
-     }
+    setSelectedServerConfigId(value || null);
+    // Re-parse if file content exists and a new server is selected
+    if (fileContent && value) {
+      tryParseYaml(fileContent, value);
+    } else if (!value) {
+      setParsedProjectData(null); // Clear parsed data if server config is deselected
+      setError("Please select a server configuration.");
+    }
   };
 
   const tryParseYaml = (content: string, serverId: string) => {
@@ -139,7 +139,10 @@ export function ImportProjectModal({
       setError(null); // Clear previous errors
     } catch (err) {
       console.error("YAML Parsing Error:", err);
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during parsing.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred during parsing.";
       setError(`YAML Parsing Error: ${errorMessage}`);
       setParsedProjectData(null);
     }
@@ -149,7 +152,8 @@ export function ImportProjectModal({
     if (!parsedProjectData || !selectedServerConfigId || error) {
       toast({
         title: mode === "create" ? "Import Failed" : "Parse Failed",
-        description: error || "Could not parse the file or missing server config.",
+        description:
+          error || "Could not parse the file or missing server config.",
         variant: "destructive",
       });
       return;
@@ -172,16 +176,17 @@ export function ImportProjectModal({
       });
       onClose();
     } else {
-       console.error("ImportProjectModal: Invalid mode or missing callback.");
-       toast({
-         title: "Error",
-         description: "An internal error occurred during import setup.",
-         variant: "destructive",
-       });
+      console.error("ImportProjectModal: Invalid mode or missing callback.");
+      toast({
+        title: "Error",
+        description: "An internal error occurred during import setup.",
+        variant: "destructive",
+      });
     }
   };
 
-  const primaryButtonText = mode === "overwrite" ? "Parse & Stage for Overwrite" : "Import Project";
+  const primaryButtonText =
+    mode === "overwrite" ? "Parse & Stage for Overwrite" : "Import Project";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -232,32 +237,37 @@ export function ImportProjectModal({
             </Select>
             {serverConfigs.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Please create a server configuration first via the "Manage
-                Servers" button on the dashboard.
+                Please create a server configuration first via the{" "}
+                <span className="font-bold">Manage Servers</span> button on the
+                dashboard.
               </p>
             )}
           </div>
 
           {error && (
-             <Alert variant="destructive">
-               <AlertTriangle className="h-4 w-4" />
-               <AlertTitle>Error</AlertTitle>
-               <AlertDescription>{error}</AlertDescription>
-             </Alert>
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {parsedProjectData && !error && (
-             <Alert variant="default">
-               <AlertTitle>Ready to Import</AlertTitle>
-               <AlertDescription>
-                 Project Name: <strong>{parsedProjectData.name}</strong>
-                 <br />
-                 {parsedProjectData.description && (
-                    <>Description: {parsedProjectData.description}<br /></>
-                 )}
-                 Roles: {parsedProjectData.agentRoles.length}, Agents: {parsedProjectData.agents.length}
-               </AlertDescription>
-             </Alert>
+            <Alert variant="default">
+              <AlertTitle>Ready to Import</AlertTitle>
+              <AlertDescription>
+                Project Name: <strong>{parsedProjectData.name}</strong>
+                <br />
+                {parsedProjectData.description && (
+                  <>
+                    Description: {parsedProjectData.description}
+                    <br />
+                  </>
+                )}
+                Roles: {parsedProjectData.agentRoles.length}, Agents:{" "}
+                {parsedProjectData.agents.length}
+              </AlertDescription>
+            </Alert>
           )}
         </div>
         <DialogFooter>
@@ -266,7 +276,9 @@ export function ImportProjectModal({
           </Button>
           <Button
             onClick={handlePrimaryAction}
-            disabled={!file || !selectedServerConfigId || !parsedProjectData || !!error}
+            disabled={
+              !file || !selectedServerConfigId || !parsedProjectData || !!error
+            }
           >
             {primaryButtonText}
           </Button>

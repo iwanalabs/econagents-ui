@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { defaultMetaFields } from "@/components/config/state-config";
+import { useRouter } from "next/navigation";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export function CreateProjectModal({
   onClose,
   onCreateProject,
 }: CreateProjectModalProps) {
+  const router = useRouter();
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [projectGameId, setProjectGameId] = useState<number | null>(null);
@@ -76,7 +78,7 @@ export function CreateProjectModal({
     setProjectDescription("");
     setProjectGameId(null);
     setSelectedServerConfigId(
-      serverConfigs.length > 0 ? serverConfigs[0].id : null,
+      serverConfigs.length > 0 ? serverConfigs[0].id : null
     );
   };
 
@@ -135,10 +137,8 @@ export function CreateProjectModal({
             {serverConfigs.length === 0 && (
               <p className="text-xs text-muted-foreground">
                 Please create a server configuration first via the{" "}
-                <Button variant="link" size="sm" onClick={() => router.push("/servers")}>
-                  Manage Servers
-                </Button>
-                button.
+                <span className="font-bold">Manage Servers</span> button on the
+                dashboard.
               </p>
             )}
           </div>
