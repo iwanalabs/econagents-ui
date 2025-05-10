@@ -321,211 +321,218 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
           <TabsContent value="basic">
             <Card>
               <CardContent className="pt-6">
-                <div className="grid gap-6 max-w-xl">
-                  {" "}
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-name">Project Name</Label>
-                    <Input
-                      id="project-name"
-                      value={project.name}
-                      onChange={(e) => updateProject({ name: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-description">Description</Label>
-                    <Textarea
-                      id="project-description"
-                      value={project.description || ""}
-                      onChange={(e) =>
-                        updateProject({ description: e.target.value })
-                      }
-                      rows={4}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-server-config">
-                      Server Configuration
-                    </Label>
-                    <Select
-                      value={project.serverConfigId ?? ""}
-                      onValueChange={(value) =>
-                        updateProject({ serverConfigId: value || null })
-                      }
-                      disabled={serverConfigs.length === 0}
-                    >
-                      <SelectTrigger id="project-server-config">
-                        <SelectValue
-                          placeholder={
-                            serverConfigs.length > 0
-                              ? "Select server configuration"
-                              : "No server configs available"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {serverConfigs.map((config) => (
-                          <SelectItem key={config.id} value={config.id}>
-                            {config.name} ({config.hostname}:{config.port})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {serverConfigs.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Please create a server configuration first via the{" "}
-                        <span className="font-bold">Manage Servers</span> button
-                        on the dashboard.
-                      </p>
-                    )}
-                    {!project.serverConfigId && serverConfigs.length > 0 && (
-                      <p className="text-xs text-destructive">
-                        Please select a server configuration for this project.
-                      </p>
-                    )}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="manager-type">Manager Type</Label>
-                    <Select
-                      value={project.manager.type}
-                      onValueChange={(type) =>
-                        updateProject({
-                          manager: {
-                            ...project.manager,
-                            type,
-                            ...(type === "HybridPhaseManager" && {
-                              continuousPhases:
-                                project.manager.continuousPhases || [],
-                              minActionDelay:
-                                project.manager.minActionDelay ?? 5,
-                              maxActionDelay:
-                                project.manager.maxActionDelay ?? 10,
-                            }),
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger id="manager-type">
-                        <SelectValue placeholder="Select manager type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="TurnBasedPhaseManager">
-                          Turn-Based Phase Manager
-                        </SelectItem>
-                        <SelectItem value="HybridPhaseManager">
-                          Hybrid Phase Manager
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {project.manager.type === "HybridPhaseManager" && (
-                    <>
-                      <div className="grid gap-2">
-                        <Label htmlFor="manager-continuous-phases">
-                          Continuous Phases (comma-separated)
-                        </Label>
-                        <Input
-                          id="manager-continuous-phases"
-                          value={project.manager.continuousPhasesString || ""}
-                          onChange={(e) =>
-                            updateProject({
-                              manager: {
-                                ...project.manager,
-                                continuousPhasesString: e.target.value,
-                                continuousPhases: parseCommaSeparatedNumbers(
-                                  e.target.value
-                                ),
-                              },
-                            })
-                          }
-                          placeholder="e.g., 1, 3, 5"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="manager-min-action-delay">
-                            Min Action Delay (seconds)
-                          </Label>
-                          <Input
-                            id="manager-min-action-delay"
-                            type="number"
-                            min="0"
-                            value={project.manager.minActionDelay ?? ""}
-                            onChange={(e) =>
-                              updateProject({
-                                manager: {
-                                  ...project.manager,
-                                  minActionDelay:
-                                    e.target.value === ""
-                                      ? undefined
-                                      : parseInt(e.target.value, 10),
-                                },
-                              })
-                            }
-                            placeholder="e.g., 5"
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="manager-max-action-delay">
-                            Max Action Delay (seconds)
-                          </Label>
-                          <Input
-                            id="manager-max-action-delay"
-                            type="number"
-                            min="0"
-                            value={project.manager.maxActionDelay ?? ""}
-                            onChange={(e) =>
-                              updateProject({
-                                manager: {
-                                  ...project.manager,
-                                  maxActionDelay:
-                                    e.target.value === ""
-                                      ? undefined
-                                      : parseInt(e.target.value, 10),
-                                },
-                              })
-                            }
-                            placeholder="e.g., 10"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {/* New Runner Configuration Fields */}
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-logs-dir">Logs Directory</Label>
-                    <Input
-                      id="project-logs-dir"
-                      value={project.logsDir || ""}
-                      onChange={(e) =>
-                        updateProject({ logsDir: e.target.value || null })
-                      }
-                      placeholder="e.g., ./logs/my_experiment"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col md:flex-row gap-8 w-full">
+                  {/* Left column: everything above Logs Directory */}
+                  <div className="flex-1 flex flex-col gap-6">
                     <div className="grid gap-2">
-                      <Label htmlFor="project-log-level">Log Level</Label>
+                      <Label htmlFor="project-name">Project Name</Label>
+                      <Input
+                        id="project-name"
+                        value={project.name}
+                        onChange={(e) =>
+                          updateProject({ name: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="project-description">Description</Label>
+                      <Textarea
+                        id="project-description"
+                        value={project.description || ""}
+                        onChange={(e) =>
+                          updateProject({ description: e.target.value })
+                        }
+                        rows={4}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="project-server-config">
+                        Server Configuration
+                      </Label>
                       <Select
-                        value={project.logLevel || "none"}
+                        value={project.serverConfigId ?? ""}
                         onValueChange={(value) =>
+                          updateProject({ serverConfigId: value || null })
+                        }
+                        disabled={serverConfigs.length === 0}
+                      >
+                        <SelectTrigger id="project-server-config">
+                          <SelectValue
+                            placeholder={
+                              serverConfigs.length > 0
+                                ? "Select server configuration"
+                                : "No server configs available"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {serverConfigs.map((config) => (
+                            <SelectItem key={config.id} value={config.id}>
+                              {config.name} ({config.hostname}:{config.port})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {serverConfigs.length === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Please create a server configuration first via the{" "}
+                          <span className="font-bold">Manage Servers</span>{" "}
+                          button on the dashboard.
+                        </p>
+                      )}
+                      {!project.serverConfigId && serverConfigs.length > 0 && (
+                        <p className="text-xs text-destructive">
+                          Please select a server configuration for this project.
+                        </p>
+                      )}
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="manager-type">Manager Type</Label>
+                      <Select
+                        value={project.manager.type}
+                        onValueChange={(type) =>
                           updateProject({
-                            logLevel: value === "none" ? null : value,
+                            manager: {
+                              ...project.manager,
+                              type,
+                              ...(type === "HybridPhaseManager" && {
+                                continuousPhases:
+                                  project.manager.continuousPhases || [],
+                                minActionDelay:
+                                  project.manager.minActionDelay ?? 5,
+                                maxActionDelay:
+                                  project.manager.maxActionDelay ?? 10,
+                              }),
+                            },
                           })
                         }
                       >
-                        <SelectTrigger id="project-log-level">
-                          <SelectValue placeholder="Select log level" />
+                        <SelectTrigger id="manager-type">
+                          <SelectValue placeholder="Select manager type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None (default)</SelectItem>
-                          <SelectItem value="DEBUG">DEBUG</SelectItem>
-                          <SelectItem value="INFO">INFO</SelectItem>
-                          <SelectItem value="WARNING">WARNING</SelectItem>
-                          <SelectItem value="ERROR">ERROR</SelectItem>
-                          <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                          <SelectItem value="TurnBasedPhaseManager">
+                            Turn-Based Phase Manager
+                          </SelectItem>
+                          <SelectItem value="HybridPhaseManager">
+                            Hybrid Phase Manager
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                    {project.manager.type === "HybridPhaseManager" && (
+                      <>
+                        <div className="grid gap-2">
+                          <Label htmlFor="manager-continuous-phases">
+                            Continuous Phases (comma-separated)
+                          </Label>
+                          <Input
+                            id="manager-continuous-phases"
+                            value={project.manager.continuousPhasesString || ""}
+                            onChange={(e) =>
+                              updateProject({
+                                manager: {
+                                  ...project.manager,
+                                  continuousPhasesString: e.target.value,
+                                  continuousPhases: parseCommaSeparatedNumbers(
+                                    e.target.value
+                                  ),
+                                },
+                              })
+                            }
+                            placeholder="e.g., 1, 3, 5"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="manager-min-action-delay">
+                              Min Action Delay (seconds)
+                            </Label>
+                            <Input
+                              id="manager-min-action-delay"
+                              type="number"
+                              min="0"
+                              value={project.manager.minActionDelay ?? ""}
+                              onChange={(e) =>
+                                updateProject({
+                                  manager: {
+                                    ...project.manager,
+                                    minActionDelay:
+                                      e.target.value === ""
+                                        ? undefined
+                                        : parseInt(e.target.value, 10),
+                                  },
+                                })
+                              }
+                              placeholder="e.g., 5"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="manager-max-action-delay">
+                              Max Action Delay (seconds)
+                            </Label>
+                            <Input
+                              id="manager-max-action-delay"
+                              type="number"
+                              min="0"
+                              value={project.manager.maxActionDelay ?? ""}
+                              onChange={(e) =>
+                                updateProject({
+                                  manager: {
+                                    ...project.manager,
+                                    maxActionDelay:
+                                      e.target.value === ""
+                                        ? undefined
+                                        : parseInt(e.target.value, 10),
+                                  },
+                                })
+                              }
+                              placeholder="e.g., 10"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex-1 flex flex-col gap-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="project-logs-dir">Logs Directory</Label>
+                        <Input
+                          id="project-logs-dir"
+                          value={project.logsDir || ""}
+                          onChange={(e) =>
+                            updateProject({ logsDir: e.target.value || null })
+                          }
+                          placeholder="e.g., ./logs/my_experiment"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="project-log-level">Log Level</Label>
+                        <Select
+                          value={project.logLevel || "none"}
+                          onValueChange={(value) =>
+                            updateProject({
+                              logLevel: value === "none" ? null : value,
+                            })
+                          }
+                        >
+                          <SelectTrigger id="project-log-level">
+                            <SelectValue placeholder="Select log level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None (default)</SelectItem>
+                            <SelectItem value="DEBUG">DEBUG</SelectItem>
+                            <SelectItem value="INFO">INFO</SelectItem>
+                            <SelectItem value="WARNING">WARNING</SelectItem>
+                            <SelectItem value="ERROR">ERROR</SelectItem>
+                            <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
                     <div className="grid gap-2">
                       <Label htmlFor="project-observability-provider">
                         Observability Provider
@@ -546,38 +553,40 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="project-phase-transition-event">
+                          Phase Transition Event
+                        </Label>
+                        <Input
+                          id="project-phase-transition-event"
+                          value={project.phaseTransitionEvent || ""}
+                          onChange={(e) =>
+                            updateProject({
+                              phaseTransitionEvent: e.target.value || null,
+                            })
+                          }
+                          placeholder="e.g., next_phase_event"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="project-phase-identifier-key">
+                          Phase Identifier Key
+                        </Label>
+                        <Input
+                          id="project-phase-identifier-key"
+                          value={project.phaseIdentifierKey || ""}
+                          onChange={(e) =>
+                            updateProject({
+                              phaseIdentifierKey: e.target.value || null,
+                            })
+                          }
+                          placeholder="e.g., current_phase"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-phase-transition-event">
-                      Phase Transition Event
-                    </Label>
-                    <Input
-                      id="project-phase-transition-event"
-                      value={project.phaseTransitionEvent || ""}
-                      onChange={(e) =>
-                        updateProject({
-                          phaseTransitionEvent: e.target.value || null,
-                        })
-                      }
-                      placeholder="e.g., next_phase_event"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="project-phase-identifier-key">
-                      Phase Identifier Key
-                    </Label>
-                    <Input
-                      id="project-phase-identifier-key"
-                      value={project.phaseIdentifierKey || ""}
-                      onChange={(e) =>
-                        updateProject({
-                          phaseIdentifierKey: e.target.value || null,
-                        })
-                      }
-                      placeholder="e.g., current_phase"
-                    />
-                  </div>
-                  {/* End New Runner Configuration Fields */}
                 </div>
               </CardContent>
             </Card>
