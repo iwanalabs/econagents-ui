@@ -79,12 +79,22 @@ export async function exportToYaml(
     yaml += "\n";
   }
 
-  // Agents
-  if (project.agents && project.agents.length > 0) {
+  let agentIdCounter = 1;
+  const agentsToExport: { id: number; role_id: number }[] = [];
+  if (project.agentRoles && project.agentRoles.length > 0) {
+    project.agentRoles.forEach(role => {
+      const numAgents = role.numberOfAgents === undefined ? 0 : role.numberOfAgents; // Default to 0 if undefined
+      for (let i = 0; i < numAgents; i++) {
+        agentsToExport.push({ id: agentIdCounter++, role_id: role.roleId });
+      }
+    });
+  }
+
+  if (agentsToExport.length > 0) {
     yaml += "agents:\n";
-    project.agents.forEach((agent) => {
+    agentsToExport.forEach((agent) => {
       yaml += `  - id: ${agent.id}\n`;
-      yaml += `    role_id: ${agent.roleId}\n`;
+      yaml += `    role_id: ${agent.role_id}\n`;
     });
     yaml += "\n";
   }

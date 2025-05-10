@@ -12,7 +12,6 @@ import { ChevronLeftIcon, FileOutput, SaveIcon, Import } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Project } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
-import { AgentsConfig } from "@/components/config/agents-config";
 import { StateConfig } from "@/components/config/state-config";
 import { PromptPartialsConfig } from "@/components/config/prompt-partials-config";
 import { exportToYaml } from "@/lib/export-yaml";
@@ -161,7 +160,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     localStorage.setItem("projects", JSON.stringify(updatedProjects));
 
     setProjectDataToOverwrite(null);
-    setOverwriteServerConfigId(null);
     setIsConfirmOverwriteDialogOpen(false);
 
     toast({
@@ -609,20 +607,11 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
 
           {/* Add combined Agents & Roles Tab Content */}
           <TabsContent value="agents-roles" className="space-y-6">
-            {/* Agent Roles Section */}
             <AgentRolesConfig
               agentRoles={project.agentRoles}
               onChange={(agentRoles) => updateProject({ agentRoles })}
               state={project.state}
               promptPartials={project.promptPartials || []}
-              agents={project.agents}
-              onAgentsChange={(agents) => updateProject({ agents })}
-            />
-            {/* Agents Section */}
-            <AgentsConfig
-              agents={project.agents}
-              agentRoles={project.agentRoles}
-              onChange={(agents) => updateProject({ agents })}
             />
           </TabsContent>
         </Tabs>

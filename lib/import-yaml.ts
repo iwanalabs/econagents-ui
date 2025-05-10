@@ -81,14 +81,21 @@ export function importFromYaml(
       taskPhases: Array.isArray(role.task_phases)
         ? role.task_phases.filter((tp: any) => typeof tp === "number")
         : [],
+      numberOfAgents: 0, // Initialize with 0, will be updated below
     };
   });
 
-  // Map Agents
-  const agents: Agent[] = (doc.agents || []).map((agent: any) => ({
+  // Map Agents from YAML (temporary)
+  const yamlAgents: Agent[] = (doc.agents || []).map((agent: any) => ({
     id: agent.id,
     roleId: agent.role_id,
   }));
+
+  // Populate numberOfAgents in agentRoles based on yamlAgents
+  agentRoles.forEach(role => {
+    const count = yamlAgents.filter(agent => agent.roleId === role.roleId).length;
+    role.numberOfAgents = count > 0 ? count : (doc.agents === undefined ? 1 : 0); // Default to 1 if no agents section, else 0
+  });
 
   // Map State
   const state: State = {
@@ -140,7 +147,7 @@ export function importFromYaml(
     description: doc.description || undefined,
     gameId: doc.game_id !== undefined ? Number(doc.game_id) : null,
     agentRoles,
-    agents,
+    agents: [], // Initialize as empty; agents are now derived from numberOfAgents in roles
     state,
     manager,
     promptPartials,
@@ -163,9 +170,6 @@ export function importFromYaml(
     importedProjectData.agentRoles.length === 0
   ) {
     console.warn("YAML Warning: No 'agentRoles' found or empty.");
-  }
-  if (!importedProjectData.agents || importedProjectData.agents.length === 0) {
-    console.warn("YAML Warning: No 'agents' found or empty.");
   }
 
   return importedProjectData;

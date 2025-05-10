@@ -36,6 +36,7 @@ export interface AgentRole {
   };
   prompts: Record<string, string>;
   taskPhases?: number[];
+  numberOfAgents: number;
 }
 
 export interface Agent {

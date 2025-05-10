@@ -57,8 +57,6 @@ interface AgentRolesConfigProps {
   onChange: (agentRoles: AgentRole[]) => void;
   promptPartials: PromptPartial[];
   state: State;
-  agents: Agent[];
-  onAgentsChange: (agents: Agent[]) => void;
 }
 
 interface PhasePrompt {
@@ -89,8 +87,6 @@ export function AgentRolesConfig({
   onChange,
   promptPartials,
   state,
-  agents,
-  onAgentsChange,
 }: AgentRolesConfigProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -98,7 +94,7 @@ export function AgentRolesConfig({
   const [currentRole, setCurrentRole] = useState<
     Omit<AgentRole, "prompts" | "taskPhases" | "llmParams"> & {
       prompts: Record<string, string>;
-      taskPhasesString?: string; 
+      taskPhasesString?: string;
       llmParamsModelName: string; // Store only modelName here
     }
   >({
@@ -108,9 +104,12 @@ export function AgentRolesConfig({
     llmParamsModelName: "gpt-4o", // Default modelName
     prompts: { system: "", user: "" },
     taskPhasesString: "",
+    numberOfAgents: 1,
   });
   // Add state for dynamic LLM parameters
-  const [dynamicLlmParams, setDynamicLlmParams] = useState<Array<{ id: string; key: string; value: string }>>([]);
+  const [dynamicLlmParams, setDynamicLlmParams] = useState<
+    Array<{ id: string; key: string; value: string }>
+  >([]);
 
   const [phasePrompts, setPhasePrompts] = useState<PhasePrompt[]>([]);
   const [activeMainTab, setActiveMainTab] = useState("basic");
@@ -119,7 +118,7 @@ export function AgentRolesConfig({
     Record<string, { state: boolean; partials: boolean }>
   >({});
   const [roleIdError, setRoleIdError] = useState<string | null>(null);
-  
+
   const stateForInserter: State = state;
 
   const contentRefs = useRef<{
@@ -240,6 +239,7 @@ export function AgentRolesConfig({
       llmParamsModelName: "gpt-4o", // Set modelName here
       prompts: { system: "", user: "" },
       taskPhasesString: "",
+      numberOfAgents: 1,
     });
     setDynamicLlmParams([]); // Initialize dynamic params as empty
     setPhasePrompts([]);
@@ -264,15 +264,17 @@ export function AgentRolesConfig({
       prompts: defaultPrompts,
       taskPhasesString: numbersToCommaSeparatedString(roleToEdit.taskPhases),
       llmParamsModelName: roleToEdit.llmParams.modelName, // Explicitly set modelName
+      numberOfAgents:
+        roleToEdit.numberOfAgents === undefined ? 0 : roleToEdit.numberOfAgents,
     });
 
     // Populate dynamicLlmParams from roleToEdit.llmParams (excluding modelName)
     const paramsForUi = Object.entries(roleToEdit.llmParams)
-      .filter(([key]) => key !== 'modelName')
+      .filter(([key]) => key !== "modelName")
       .map(([key, value], i) => ({
         id: `param-${roleToEdit.roleId}-${i}-${Date.now()}`, // unique id for react key
         key,
-        value: String(value ?? ''), // Store as string for input, handle null/undefined
+        value: String(value ?? ""), // Store as string for input, handle null/undefined
       }));
     setDynamicLlmParams(paramsForUi);
 
@@ -285,71 +287,69 @@ export function AgentRolesConfig({
   };
 
   const handleDeleteRole = (index: number) => {
-    // Get the role ID before deleting the role
-    const roleIdToDelete = agentRoles[index].roleId;
-
     // Filter out the deleted role
     const newRoles = [...agentRoles];
     newRoles.splice(index, 1);
     onChange(newRoles);
-
-    // Filter out agents associated with the deleted role
-    const newAgents = agents.filter((agent) => agent.roleId !== roleIdToDelete);
-    onAgentsChange(newAgents); // Call the callback to update agents in the parent
   };
 
   const handleSaveRole = () => {
     if (!currentRole.name) return;
     setRoleIdError(null); // Clear previous errors
-  
+
     const newRoleId = currentRole.roleId; // This is already a number from the input's onChange
-  
+
     if (isNaN(newRoleId) || newRoleId <= 0) {
       setRoleIdError("Role ID must be a positive integer.");
       return;
     }
-  
+
     // Uniqueness check for new roles (editingIndex === null)
     // For existing roles (editingIndex !== null), ID is disabled and shouldn't change.
     if (editingIndex === null) {
-      if (agentRoles.some(role => role.roleId === newRoleId)) {
-        setRoleIdError(`Role ID ${newRoleId} is already in use. Please choose a unique ID.`);
+      if (agentRoles.some((role) => role.roleId === newRoleId)) {
+        setRoleIdError(
+          `Role ID ${newRoleId} is already in use. Please choose a unique ID.`
+        );
         return;
       }
     }
-  
+
     // Construct final llmParams
-    const finalLlmParams: Record<string, any> = { modelName: currentRole.llmParamsModelName };
-    dynamicLlmParams.forEach(param => {
+    const finalLlmParams: Record<string, any> = {
+      modelName: currentRole.llmParamsModelName,
+    };
+    dynamicLlmParams.forEach((param) => {
       const key = param.key.trim();
       if (key) {
         let parsedValue: any = param.value;
         const trimmedValue = param.value.trim();
-        
-        if (trimmedValue === '') {
-            // Keep as empty string or handle as null if appropriate for your backend
-            // For now, let's keep it as an empty string if user explicitly typed it.
-            // If it was initially null/undefined and became an empty string, it's still empty.
-             parsedValue = "";
+
+        if (trimmedValue === "") {
+          // Keep as empty string or handle as null if appropriate for your backend
+          // For now, let's keep it as an empty string if user explicitly typed it.
+          // If it was initially null/undefined and became an empty string, it's still empty.
+          parsedValue = "";
         } else if (!isNaN(Number(trimmedValue))) {
-            parsedValue = Number(trimmedValue);
-        } else if (trimmedValue.toLowerCase() === 'true') {
-            parsedValue = true;
-        } else if (trimmedValue.toLowerCase() === 'false') {
-            parsedValue = false;
+          parsedValue = Number(trimmedValue);
+        } else if (trimmedValue.toLowerCase() === "true") {
+          parsedValue = true;
+        } else if (trimmedValue.toLowerCase() === "false") {
+          parsedValue = false;
         }
         // Otherwise, it remains a string (param.value)
         finalLlmParams[key] = parsedValue;
       }
     });
-  
+
     const finalRole: AgentRole = {
       roleId: newRoleId,
       name: currentRole.name,
       llmType: currentRole.llmType,
-      llmParams: finalLlmParams, // Use the constructed llmParams
-      prompts: combinePrompts(), // Combine prompts before saving
+      llmParams: finalLlmParams,
+      prompts: combinePrompts(),
       taskPhases: parseCommaSeparatedNumbers(currentRole.taskPhasesString),
+      numberOfAgents: currentRole.numberOfAgents,
     };
 
     let newRoles: AgentRole[];
@@ -469,6 +469,12 @@ export function AgentRolesConfig({
                     <strong>Task Phases:</strong> {role.taskPhases.join(", ")}
                   </div>
                 )}
+                <div>
+                  <strong>Number of Agents:</strong>{" "}
+                  {role.numberOfAgents === undefined
+                    ? "N/A"
+                    : role.numberOfAgents}
+                </div>
               </CardContent>
               <CardFooter className="flex justify-end space-x-2">
                 <Button
@@ -511,24 +517,35 @@ export function AgentRolesConfig({
 
             <TabsContent value="basic">
               <div className="space-y-6 py-4 max-h-[75vh] overflow-y-auto px-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="role-id">Role ID</Label>
                     <Input
                       id="role-id"
                       type="number"
-                      value={currentRole.roleId === 0 && editingIndex === null ? "" : currentRole.roleId.toString()}
+                      value={
+                        currentRole.roleId === 0 && editingIndex === null
+                          ? ""
+                          : currentRole.roleId.toString()
+                      }
                       onChange={(e) => {
                         const val = e.target.value;
                         const numVal = parseInt(val, 10);
-                        setCurrentRole({ ...currentRole, roleId: isNaN(numVal) ? 0 : numVal });
+                        setCurrentRole({
+                          ...currentRole,
+                          roleId: isNaN(numVal) ? 0 : numVal,
+                        });
                         setRoleIdError(null);
                       }}
                       placeholder="e.g., 1"
                       disabled={editingIndex !== null}
                       min="1"
                     />
-                    {roleIdError && <p className="text-xs text-destructive mt-1">{roleIdError}</p>}
+                    {roleIdError && (
+                      <p className="text-xs text-destructive mt-1">
+                        {roleIdError}
+                      </p>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="role-name">Role Name</Label>
@@ -541,9 +558,33 @@ export function AgentRolesConfig({
                       placeholder="e.g., Prisoner"
                     />
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="num-agents">Number of Agents</Label>
+                    <Input
+                      id="num-agents"
+                      type="number"
+                      value={
+                        currentRole.numberOfAgents === undefined
+                          ? ""
+                          : currentRole.numberOfAgents.toString()
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const numVal = parseInt(val, 10);
+                        setCurrentRole({
+                          ...currentRole,
+                          numberOfAgents: isNaN(numVal)
+                            ? 1
+                            : Math.max(0, numVal), // Default to 1, ensure non-negative
+                        });
+                      }}
+                      placeholder="e.g., 3"
+                      min="0"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="llm-type">LLM Type</Label>
                     <Select
@@ -575,8 +616,7 @@ export function AgentRolesConfig({
                       placeholder="e.g., gpt-4o"
                     />
                   </div>
-
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 col-span-2">
                     <Label htmlFor="task-phases">
                       Task Phases (comma-separated)
                     </Label>
@@ -628,7 +668,9 @@ export function AgentRolesConfig({
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            const newDynamicParams = dynamicLlmParams.filter(p => p.id !== param.id);
+                            const newDynamicParams = dynamicLlmParams.filter(
+                              (p) => p.id !== param.id
+                            );
                             setDynamicLlmParams(newDynamicParams);
                           }}
                           className="text-destructive hover:bg-destructive/10"
@@ -1276,7 +1318,10 @@ export function AgentRolesConfig({
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveRole} disabled={!currentRole.name || !!roleIdError}>
+            <Button
+              onClick={handleSaveRole}
+              disabled={!currentRole.name || !!roleIdError}
+            >
               Save
             </Button>
           </DialogFooter>
