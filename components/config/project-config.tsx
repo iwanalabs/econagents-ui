@@ -312,8 +312,8 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
           <TabsList className="mb-6">
             <TabsTrigger value="basic">Project</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
-            <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
             <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
+            <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic">
