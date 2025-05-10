@@ -12,14 +12,6 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useServerConfigs } from "@/hooks/use-server-configs";
 import { useToast } from "@/hooks/use-toast";
 import { importFromYaml } from "@/lib/import-yaml";
 import type { Project } from "@/types";
@@ -31,10 +23,7 @@ interface ImportProjectModalProps {
   onClose: () => void;
   onImportProject?: (project: Project) => void;
   mode?: "create" | "overwrite";
-  onParseSuccess?: (
-    parsedData: Omit<Project, "id" | "createdAt">,
-    selectedServerConfigId: string
-  ) => void;
+  onParseSuccess?: (parsedData: Omit<Project, "id" | "createdAt">) => void;
 }
 
 export function ImportProjectModal({
@@ -50,20 +39,9 @@ export function ImportProjectModal({
     Project,
     "id" | "createdAt"
   > | null>(null);
-  const [serverConfigs] = useServerConfigs();
-  const [selectedServerConfigId, setSelectedServerConfigId] = useState<
-    string | null
-  >(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  // Set default server config when modal opens or configs load
-  useEffect(() => {
-    if (isOpen && serverConfigs.length > 0 && !selectedServerConfigId) {
-      setSelectedServerConfigId(serverConfigs[0].id);
-    }
-  }, [isOpen, serverConfigs, selectedServerConfigId]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -96,17 +74,7 @@ export function ImportProjectModal({
         reader.onload = (e) => {
           const content = e.target?.result as string;
           setFileContent(content);
-          // Attempt to parse immediately if server config is selected
-          if (selectedServerConfigId) {
-            tryParseYaml(content, selectedServerConfigId);
-          } else if (serverConfigs.length > 0) {
-            // If no server config selected yet, but available, select first and parse
-            const defaultId = serverConfigs[0].id;
-            setSelectedServerConfigId(defaultId);
-            tryParseYaml(content, defaultId);
-          } else {
-            setError("Please select a server configuration.");
-          }
+          tryParseYaml(content);
         };
         reader.onerror = () => {
           setError("Failed to read file.");
@@ -121,20 +89,9 @@ export function ImportProjectModal({
     }
   };
 
-  const handleServerConfigChange = (value: string) => {
-    setSelectedServerConfigId(value || null);
-    // Re-parse if file content exists and a new server is selected
-    if (fileContent && value) {
-      tryParseYaml(fileContent, value);
-    } else if (!value) {
-      setParsedProjectData(null); // Clear parsed data if server config is deselected
-      setError("Please select a server configuration.");
-    }
-  };
-
-  const tryParseYaml = (content: string, serverId: string) => {
+  const tryParseYaml = (content: string) => {
     try {
-      const data = importFromYaml(content, serverId);
+      const data = importFromYaml(content);
       setParsedProjectData(data);
       setError(null); // Clear previous errors
     } catch (err) {
@@ -149,25 +106,23 @@ export function ImportProjectModal({
   };
 
   const handlePrimaryAction = () => {
-    if (!parsedProjectData || !selectedServerConfigId || error) {
+    if (!parsedProjectData || error) {
       toast({
         title: mode === "create" ? "Import Failed" : "Parse Failed",
-        description:
-          error || "Could not parse the file or missing server config.",
+        description: error || "Could not parse the file.",
         variant: "destructive",
       });
       return;
     }
 
     if (mode === "overwrite" && onParseSuccess) {
-      onParseSuccess(parsedProjectData, selectedServerConfigId);
+      onParseSuccess(parsedProjectData);
       onClose();
     } else if (mode === "create" && onImportProject) {
       const newProject: Project = {
         ...parsedProjectData,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
-        serverConfigId: selectedServerConfigId,
       };
       onImportProject(newProject);
       toast({
@@ -211,39 +166,6 @@ export function ImportProjectModal({
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="server-config">Server Configuration *</Label>
-            <Select
-              value={selectedServerConfigId ?? ""}
-              onValueChange={handleServerConfigChange}
-              disabled={serverConfigs.length === 0}
-            >
-              <SelectTrigger id="server-config">
-                <SelectValue
-                  placeholder={
-                    serverConfigs.length > 0
-                      ? "Select server configuration"
-                      : "No server configs available"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {serverConfigs.map((config) => (
-                  <SelectItem key={config.id} value={config.id}>
-                    {config.name} ({config.hostname}:{config.port})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {serverConfigs.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                Please create a server configuration first via the{" "}
-                <span className="font-bold">Manage Servers</span> button on the
-                dashboard.
-              </p>
-            )}
-          </div>
-
           {error && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -276,9 +198,7 @@ export function ImportProjectModal({
           </Button>
           <Button
             onClick={handlePrimaryAction}
-            disabled={
-              !file || !selectedServerConfigId || !parsedProjectData || !!error
-            }
+            disabled={!file || !parsedProjectData || !!error}
           >
             {primaryButtonText}
           </Button>

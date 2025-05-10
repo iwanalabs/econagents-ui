@@ -241,23 +241,23 @@ export async function exportToYaml(
   yaml += `  port: ${serverConfig.port}\n`;
   yaml += `  path: "${serverConfig.path}"\n`;
 
-  if (serverConfig.logsDir) {
-    yaml += `  logs_dir: "${serverConfig.logsDir}"\n`;
+  if (project.logsDir) {
+    yaml += `  logs_dir: "${project.logsDir}"\n`;
   }
-  if (serverConfig.logLevel) {
-    yaml += `  log_level: "${serverConfig.logLevel}"\n`;
+  if (project.logLevel && project.logLevel !== "none") {
+    yaml += `  log_level: "${project.logLevel}"\n`;
   }
-  if (serverConfig.phaseTransitionEvent) {
-    yaml += `  phase_transition_event: "${serverConfig.phaseTransitionEvent}"\n`;
+  if (project.phaseTransitionEvent) {
+    yaml += `  phase_transition_event: "${project.phaseTransitionEvent}"\n`;
   }
-  if (serverConfig.phaseIdentifierKey) {
-    yaml += `  phase_identifier_key: "${serverConfig.phaseIdentifierKey}"\n`;
+  if (project.phaseIdentifierKey) {
+    yaml += `  phase_identifier_key: "${project.phaseIdentifierKey}"\n`;
   }
   if (
-    serverConfig.observabilityProvider &&
-    serverConfig.observabilityProvider !== "none"
+    project.observabilityProvider &&
+    project.observabilityProvider !== "none"
   ) {
-    yaml += `  observability_provider: "${serverConfig.observabilityProvider}"\n`;
+    yaml += `  observability_provider: "${project.observabilityProvider}"\n`;
   }
 
   const safeFilename = project.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();

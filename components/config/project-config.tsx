@@ -67,24 +67,15 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
     Project,
     "id" | "createdAt"
   > | null>(null);
-  const [overwriteServerConfigId, setOverwriteServerConfigId] = useState<
-    string | null
-  >(null);
 
   useEffect(() => {
     const foundProject = projects.find((p) => p.id === projectId);
     if (foundProject) {
-      if (!foundProject.serverConfigId && serverConfigs.length > 0) {
-        const projectToSet = { ...foundProject };
-        projectToSet.serverConfigId = serverConfigs[0].id;
-        setProject(projectToSet);
-      } else {
-        setProject(foundProject);
-      }
+      setProject(foundProject);
     } else {
       router.push("/");
     }
-  }, [projectId, projects, router, serverConfigs]);
+  }, [projectId, projects, router]);
 
   useEffect(() => {
     if (!project || !project.manager) return;
@@ -142,23 +133,21 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   };
 
   const handleParseSuccess = (
-    parsedData: Omit<Project, "id" | "createdAt">,
-    selectedServerConfigId: string
+    parsedData: Omit<Project, "id" | "createdAt">
   ) => {
     setProjectDataToOverwrite(parsedData);
-    setOverwriteServerConfigId(selectedServerConfigId);
     setIsImportOverwriteModalOpen(false);
     setIsConfirmOverwriteDialogOpen(true);
   };
 
   const confirmOverwrite = () => {
-    if (!project || !projectDataToOverwrite || !overwriteServerConfigId) return;
+    if (!project || !projectDataToOverwrite) return;
 
     const updatedProjectData: Project = {
       ...projectDataToOverwrite,
       id: project.id,
       createdAt: project.createdAt,
-      serverConfigId: overwriteServerConfigId,
+      serverConfigId: projectDataToOverwrite.serverConfigId,
     };
 
     setProject(updatedProjectData);
@@ -259,6 +248,13 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         ...updates,
         manager: newManager,
       };
+
+      if (newProjectState.manager.type !== "HybridPhaseManager") {
+        delete newProjectState.manager.continuousPhases;
+        delete newProjectState.manager.continuousPhasesString;
+        delete newProjectState.manager.minActionDelay;
+        delete newProjectState.manager.maxActionDelay;
+      }
 
       return newProjectState;
     });
@@ -494,6 +490,94 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
                       </div>
                     </>
                   )}
+                  {/* New Runner Configuration Fields */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-logs-dir">Logs Directory</Label>
+                    <Input
+                      id="project-logs-dir"
+                      value={project.logsDir || ""}
+                      onChange={(e) =>
+                        updateProject({ logsDir: e.target.value || null })
+                      }
+                      placeholder="e.g., ./logs/my_experiment"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="project-log-level">Log Level</Label>
+                      <Select
+                        value={project.logLevel || "none"}
+                        onValueChange={(value) =>
+                          updateProject({
+                            logLevel: value === "none" ? null : value,
+                          })
+                        }
+                      >
+                        <SelectTrigger id="project-log-level">
+                          <SelectValue placeholder="Select log level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None (default)</SelectItem>
+                          <SelectItem value="DEBUG">DEBUG</SelectItem>
+                          <SelectItem value="INFO">INFO</SelectItem>
+                          <SelectItem value="WARNING">WARNING</SelectItem>
+                          <SelectItem value="ERROR">ERROR</SelectItem>
+                          <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="project-observability-provider">
+                        Observability Provider
+                      </Label>
+                      <Select
+                        value={project.observabilityProvider || "none"}
+                        onValueChange={(value) =>
+                          updateProject({ observabilityProvider: value })
+                        }
+                      >
+                        <SelectTrigger id="project-observability-provider">
+                          <SelectValue placeholder="Select provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="langsmith">LangSmith</SelectItem>
+                          <SelectItem value="langfuse">LangFuse</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-phase-transition-event">
+                      Phase Transition Event
+                    </Label>
+                    <Input
+                      id="project-phase-transition-event"
+                      value={project.phaseTransitionEvent || ""}
+                      onChange={(e) =>
+                        updateProject({
+                          phaseTransitionEvent: e.target.value || null,
+                        })
+                      }
+                      placeholder="e.g., next_phase_event"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="project-phase-identifier-key">
+                      Phase Identifier Key
+                    </Label>
+                    <Input
+                      id="project-phase-identifier-key"
+                      value={project.phaseIdentifierKey || ""}
+                      onChange={(e) =>
+                        updateProject({
+                          phaseIdentifierKey: e.target.value || null,
+                        })
+                      }
+                      placeholder="e.g., current_phase"
+                    />
+                  </div>
+                  {/* End New Runner Configuration Fields */}
                 </div>
               </CardContent>
             </Card>
@@ -563,7 +647,6 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
             <AlertDialogCancel
               onClick={() => {
                 setProjectDataToOverwrite(null);
-                setOverwriteServerConfigId(null);
               }}
             >
               Cancel

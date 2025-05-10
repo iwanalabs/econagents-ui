@@ -10,9 +10,13 @@ export interface Project {
   serverConfigId?: string | null;
   promptPartials?: PromptPartial[];
   gameId?: number | null;
+  logsDir?: string | null;
+  logLevel?: string | null;
+  phaseTransitionEvent?: string | null;
+  phaseIdentifierKey?: string | null;
+  observabilityProvider?: string;
 }
 
-// Define a union type for allowed state field types
 export type StateFieldType =
   | "str"
   | "int"

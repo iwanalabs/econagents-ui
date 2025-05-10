@@ -51,8 +51,7 @@ function mapStateField(yamlField: Record<string, any>): StateField {
 
 // Main import function
 export function importFromYaml(
-  yamlString: string,
-  selectedServerConfigId: string
+  yamlString: string
 ): Omit<Project, "id" | "createdAt"> {
   const doc = yaml.load(yamlString) as ProjectYaml;
 
@@ -68,8 +67,7 @@ export function importFromYaml(
 
   // Map Agent Roles
   const agentRoles: AgentRole[] = (doc.agent_roles || []).map((role: any) => {
-    const { model_name, ...otherParams } =
-      role.llm_params || {};
+    const { model_name, ...otherParams } = role.llm_params || {};
 
     return {
       roleId: role.role_id,
@@ -134,7 +132,10 @@ export function importFromYaml(
     })
   );
 
-  const importedProjectData: Omit<Project, "id" | "createdAt"> = {
+  const importedProjectData: Omit<
+    Project,
+    "id" | "createdAt" | "serverConfigId"
+  > = {
     name: doc.name,
     description: doc.description || undefined,
     gameId: doc.game_id !== undefined ? Number(doc.game_id) : null,
@@ -143,8 +144,19 @@ export function importFromYaml(
     state,
     manager,
     promptPartials,
-    serverConfigId: selectedServerConfigId,
   };
+
+  // Populate new project-level fields from runner section
+  if (doc.runner) {
+    importedProjectData.logsDir = doc.runner.logs_dir ?? null;
+    importedProjectData.logLevel = doc.runner.log_level ?? null;
+    importedProjectData.phaseTransitionEvent =
+      doc.runner.phase_transition_event ?? null;
+    importedProjectData.phaseIdentifierKey =
+      doc.runner.phase_identifier_key ?? null;
+    importedProjectData.observabilityProvider =
+      doc.runner.observability_provider || "none";
+  }
 
   if (
     !importedProjectData.agentRoles ||
