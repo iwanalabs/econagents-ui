@@ -46,7 +46,7 @@ export function StateVariableInserter({
   const renderFields = (
     fields: StateField[],
     type: string,
-    jinjaTypeName: string,
+    jinjaTypeName: string
   ) => {
     if (!fields || fields.length === 0) {
       return null;
@@ -73,27 +73,27 @@ export function StateVariableInserter({
     );
   };
 
+  const metaFields = renderFields(state.metaInformation, "meta", "meta");
   const publicFields = renderFields(
     state.publicInformation,
     "public",
-    "public_information",
+    "public_information"
   );
   const privateFields = renderFields(
     state.privateInformation,
     "private",
-    "private_information",
+    "private_information"
   );
-  const metaFields = renderFields(state.metaInformation, "meta", "meta");
 
   return (
     <div className="mt-2 p-2 border rounded-md bg-muted/30">
+      {metaFields}
+      {publicFields && metaFields && <Separator className="my-1" />}
       {publicFields}
-      {privateFields && publicFields && <Separator className="my-1" />}
-      {privateFields}
-      {metaFields && (privateFields || publicFields) && (
+      {privateFields && (publicFields || metaFields) && (
         <Separator className="my-1" />
       )}
-      {metaFields}
+      {privateFields}
     </div>
   );
 }

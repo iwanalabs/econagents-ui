@@ -877,7 +877,7 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                         })
                       }
                     />
-                    <Label htmlFor="field-optional">Can be null?</Label>
+                    <Label htmlFor="field-optional">Is nullable?</Label>
                   </div>
                 </>
               );
