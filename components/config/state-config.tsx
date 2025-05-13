@@ -772,6 +772,65 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                   </div>
 
                   <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="field-events">Events</Label>
+                        <Input
+                          id="field-events"
+                          value={
+                            Array.isArray(currentField.events)
+                              ? currentField.events.join(", ")
+                              : currentField.events || ""
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setCurrentField({
+                              ...currentField,
+                              events: value.split(",").map((s) => s.trim()),
+                              excludedEvents: value
+                                ? []
+                                : currentField.excludedEvents,
+                            });
+                          }}
+                          placeholder="e.g., event1, event2"
+                          disabled={
+                            !!(Array.isArray(currentField.excludedEvents)
+                              ? currentField.excludedEvents.join(", ")
+                              : currentField.excludedEvents)
+                          }
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="field-excluded-events">
+                          Excluded Events
+                        </Label>
+                        <Input
+                          id="field-excluded-events"
+                          value={
+                            Array.isArray(currentField.excludedEvents)
+                              ? currentField.excludedEvents.join(", ")
+                              : currentField.excludedEvents || ""
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setCurrentField({
+                              ...currentField,
+                              excludedEvents: value
+                                .split(",")
+                                .map((s) => s.trim()),
+                              events: value ? [] : currentField.events,
+                            });
+                          }}
+                          placeholder="e.g., event3, event4"
+                          disabled={
+                            !!(Array.isArray(currentField.events)
+                              ? currentField.events.join(", ")
+                              : currentField.events)
+                          }
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid gap-2">
                       <Label htmlFor="event-key">Event Key</Label>
                       <Input
@@ -786,67 +845,6 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                         placeholder="e.g., round"
                       />
                     </div>
-
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="field-events">Events</Label>
-                          <Input
-                            id="field-events"
-                            value={
-                              Array.isArray(currentField.events)
-                                ? currentField.events.join(", ")
-                                : currentField.events || ""
-                            }
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setCurrentField({
-                                ...currentField,
-                                events: value.split(",").map((s) => s.trim()),
-                                excludedEvents: value
-                                  ? []
-                                  : currentField.excludedEvents,
-                              });
-                            }}
-                            placeholder="e.g., event1, event2"
-                            disabled={
-                              !!(Array.isArray(currentField.excludedEvents)
-                                ? currentField.excludedEvents.join(", ")
-                                : currentField.excludedEvents)
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="field-excluded-events">
-                            Excluded Events
-                          </Label>
-                          <Input
-                            id="field-excluded-events"
-                            value={
-                              Array.isArray(currentField.excludedEvents)
-                                ? currentField.excludedEvents.join(", ")
-                                : currentField.excludedEvents || ""
-                            }
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setCurrentField({
-                                ...currentField,
-                                excludedEvents: value
-                                  .split(",")
-                                  .map((s) => s.trim()),
-                                events: value ? [] : currentField.events,
-                              });
-                            }}
-                            placeholder="e.g., event3, event4"
-                            disabled={
-                              !!(Array.isArray(currentField.events)
-                                ? currentField.events.join(", ")
-                                : currentField.events)
-                            }
-                          />
-                        </div>
-                      </div>
-                    </>
 
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -877,7 +875,9 @@ export function StateConfig({ state, onChange }: StateConfigProps) {
                         })
                       }
                     />
-                    <Label htmlFor="field-optional">Is nullable?</Label>
+                    <Label htmlFor="field-optional">
+                      Is optional? / Can be null?
+                    </Label>
                   </div>
                 </>
               );
