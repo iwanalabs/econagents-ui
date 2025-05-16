@@ -265,7 +265,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b border-border">
-        <div className="container flex items-center justify-between h-14 px-4">
+        <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -307,7 +307,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         </div>
       </header>
 
-      <main className="flex-1 container py-6 px-4">
+      <main className="flex-1 mx-auto py-6 px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="basic">Project</TabsTrigger>
