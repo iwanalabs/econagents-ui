@@ -27,11 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  PlusIcon,
-  Trash2Icon,
-  EditIcon,
-} from "lucide-react";
+import { PlusIcon, Trash2Icon, EditIcon } from "lucide-react";
 import type { AgentRole, Agent } from "@/types/project";
 import { PromptPartial } from "@/types";
 import { State } from "@/types";
@@ -79,6 +75,7 @@ export function AgentRolesConfig({
     name: "",
     llmType: "ChatOpenAI",
     llmParamsModelName: "gpt-4o", // Default modelName
+
     taskPhasesString: "",
     numberOfAgents: 1,
   });
@@ -86,7 +83,7 @@ export function AgentRolesConfig({
   const [dynamicLlmParams, setDynamicLlmParams] = useState<
     Array<{ id: string; key: string; value: string }>
   >([]);
-  
+
   const [roleIdError, setRoleIdError] = useState<string | null>(null);
 
   const handleAddRole = () => {
@@ -193,7 +190,10 @@ export function AgentRolesConfig({
       roleId: newRoleId,
       name: currentRole.name,
       llmType: currentRole.llmType,
-      llmParams: finalLlmParams,
+      llmParams: {
+        modelName: currentRole.llmParamsModelName,
+        ...finalLlmParams,
+      },
       prompts: {}, // Set empty prompts object
       taskPhases: parseCommaSeparatedNumbers(currentRole.taskPhasesString),
       numberOfAgents: currentRole.numberOfAgents,
@@ -210,7 +210,7 @@ export function AgentRolesConfig({
     onChange(newRoles);
     setIsDialogOpen(false);
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -243,10 +243,6 @@ export function AgentRolesConfig({
                 </CardDescription>
               </CardHeader>
               <CardContent className="pb-2 text-xs space-y-1">
-                <div>
-                  <strong>Prompts:</strong>{" "}
-                  {Object.keys(role.prompts || {}).length} defined
-                </div>
                 {role.taskPhases && role.taskPhases.length > 0 && (
                   <div>
                     <strong>Task Phases:</strong> {role.taskPhases.join(", ")}
@@ -314,9 +310,7 @@ export function AgentRolesConfig({
                   min="1"
                 />
                 {roleIdError && (
-                  <p className="text-xs text-destructive mt-1">
-                    {roleIdError}
-                  </p>
+                  <p className="text-xs text-destructive mt-1">{roleIdError}</p>
                 )}
               </div>
               <div className="grid gap-2">
@@ -345,9 +339,7 @@ export function AgentRolesConfig({
                     const numVal = parseInt(val, 10);
                     setCurrentRole({
                       ...currentRole,
-                      numberOfAgents: isNaN(numVal)
-                        ? 1
-                        : Math.max(0, numVal), // Default to 1, ensure non-negative
+                      numberOfAgents: isNaN(numVal) ? 1 : Math.max(0, numVal), // Default to 1, ensure non-negative
                     });
                   }}
                   placeholder="e.g., 3"

@@ -225,6 +225,59 @@ export function ProjectPromptsConfig({
     }, 0);
   };
 
+  const getPromptsSummary = (prompts: Record<string, string>): string => {
+    const summaryItems: string[] = [];
+    
+    // Check for default prompts
+    const hasDefaultSystem = prompts.system && prompts.system.trim() !== "";
+    const hasDefaultUser = prompts.user && prompts.user.trim() !== "";
+    
+    if (hasDefaultSystem || hasDefaultUser) {
+      const defaultParts: string[] = [];
+      if (hasDefaultSystem) defaultParts.push("S");
+      if (hasDefaultUser) defaultParts.push("U");
+      summaryItems.push(`default(${defaultParts.join(", ")})`);
+    }
+    
+    // Check for phase-specific prompts
+    const phasePrompts = new Map<number, { system: boolean; user: boolean }>();
+    
+    for (const key in prompts) {
+      const systemMatch = key.match(/^system_phase_(\d+)$/);
+      const userMatch = key.match(/^user_phase_(\d+)$/);
+      
+      if (systemMatch && prompts[key].trim() !== "") {
+        const phase = parseInt(systemMatch[1], 10);
+        if (!phasePrompts.has(phase)) {
+          phasePrompts.set(phase, { system: false, user: false });
+        }
+        phasePrompts.get(phase)!.system = true;
+      }
+      
+      if (userMatch && prompts[key].trim() !== "") {
+        const phase = parseInt(userMatch[1], 10);
+        if (!phasePrompts.has(phase)) {
+          phasePrompts.set(phase, { system: false, user: false });
+        }
+        phasePrompts.get(phase)!.user = true;
+      }
+    }
+    
+    // Sort phases and add to summary
+    const sortedPhases = Array.from(phasePrompts.keys()).sort((a, b) => a - b);
+    for (const phase of sortedPhases) {
+      const { system, user } = phasePrompts.get(phase)!;
+      const phaseParts: string[] = [];
+      if (system) phaseParts.push("S");
+      if (user) phaseParts.push("U");
+      if (phaseParts.length > 0) {
+        summaryItems.push(`${phase}(${phaseParts.join(", ")})`);
+      }
+    }
+    
+    return summaryItems.length > 0 ? summaryItems.join(" • ") : "No prompts defined";
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -261,6 +314,11 @@ export function ProjectPromptsConfig({
                     <p className="text-xs text-muted-foreground font-normal">
                       {role.llmType} - {role.llmParams.modelName}
                     </p>
+                  </div>
+                  <div className="flex items-center justify-end">
+                    <span className="text-xs text-muted-foreground font-normal">
+                      {getPromptsSummary(role.prompts)}
+                    </span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0">
