@@ -81,7 +81,7 @@ export function ProjectDashboard() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b border-border">
-        <div className="container flex items-center justify-between h-14 px-4">
+        <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-4">
             <div className="bg-primary text-primary-foreground p-1 rounded text-sm font-bold">
               EA
@@ -117,7 +117,7 @@ export function ProjectDashboard() {
         </div>
       </header>
 
-      <main className="flex-1 container py-6 px-4">
+      <main className="flex-1 mx-auto py-6 px-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold">Create your own pipeline</h2>
           <div className="relative w-64">

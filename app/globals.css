@@ -143,7 +143,6 @@
   font-family: var(--font-mono);
 }
 
-/* Ensure dark mode variants if needed, though oklch might handle it */
 .dark .prompt-partial-content {
   background-color: oklch(var(--accent) / 0.7);
   border: 1px dashed oklch(var(--accent-foreground) / 0.5);

@@ -14,6 +14,7 @@ import type { Project } from "@/types/project";
 import { AgentRolesConfig } from "@/components/config/agent-roles-config";
 import { StateConfig } from "@/components/config/state-config";
 import { PromptPartialsConfig } from "@/components/config/prompt-partials-config";
+import { ProjectPromptsConfig } from "@/components/config/project-prompts-config";
 import { exportToYaml } from "@/lib/export-yaml";
 import { useToast } from "@/hooks/use-toast";
 import { useServerConfigs } from "@/hooks/use-server-configs";
@@ -265,7 +266,7 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b border-border">
-        <div className="container flex items-center justify-between h-14 px-4">
+        <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -307,12 +308,13 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
         </div>
       </header>
 
-      <main className="flex-1 container py-6 px-4">
+      <main className="flex-1 container mx-auto py-6 px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="basic">Project</TabsTrigger>
             <TabsTrigger value="state">State</TabsTrigger>
             <TabsTrigger value="agents-roles">Agents & Roles</TabsTrigger>
+            <TabsTrigger value="prompts">Prompts</TabsTrigger>
             <TabsTrigger value="prompt-partials">Prompt Partials</TabsTrigger>
           </TabsList>
 
@@ -612,6 +614,18 @@ export function ProjectConfig({ projectId }: ProjectConfigProps) {
               onChange={(agentRoles) => updateProject({ agentRoles })}
               state={project.state}
               promptPartials={project.promptPartials || []}
+            />
+          </TabsContent>
+
+          {/* Add new TabsContent for Prompts */}
+          <TabsContent value="prompts">
+            <ProjectPromptsConfig
+              agentRoles={project.agentRoles}
+              promptPartials={project.promptPartials || []}
+              state={project.state}
+              onUpdateAgentRoles={(updatedAgentRoles) =>
+                updateProject({ agentRoles: updatedAgentRoles })
+              }
             />
           </TabsContent>
         </Tabs>
