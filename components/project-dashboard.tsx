@@ -22,12 +22,15 @@ import type { Project } from "@/types/project";
 import { ServerManagementModal } from "@/components/server-management-modal";
 import { ImportProjectModal } from "@/components/import-project-modal";
 
+type ActiveHeaderButton = "servers" | "import" | null;
+
 export function ProjectDashboard() {
   const [projects, setProjects] = useLocalStorage<Project[]>("projects", []);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [activeHeaderButton, setActiveHeaderButton] = useState<ActiveHeaderButton>(null);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [projectToDeleteId, setProjectToDeleteId] = useState<string | null>(
@@ -87,19 +90,25 @@ export function ProjectDashboard() {
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              variant="outline"
+              variant={activeHeaderButton === "servers" ? "active" : "outline"}
               size="sm"
               className="gap-2"
-              onClick={() => setIsServerModalOpen(true)}
+              onClick={() => {
+                setIsServerModalOpen(true);
+                setActiveHeaderButton("servers");
+              }}
             >
               <ServerIcon className="h-4 w-4" />
               Manage Servers
             </Button>
             <Button
-              variant="outline"
+              variant={activeHeaderButton === "import" ? "active" : "outline"}
               size="sm"
               className="gap-2"
-              onClick={() => setIsImportModalOpen(true)}
+              onClick={() => {
+                setIsImportModalOpen(true);
+                setActiveHeaderButton("import");
+              }}
             >
               <Import className="h-4 w-4" />
               Import Project
@@ -170,12 +179,18 @@ export function ProjectDashboard() {
 
       <ServerManagementModal
         isOpen={isServerModalOpen}
-        onClose={() => setIsServerModalOpen(false)}
+        onClose={() => {
+          setIsServerModalOpen(false);
+          setActiveHeaderButton(null);
+        }}
       />
 
       <ImportProjectModal
         isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          setActiveHeaderButton(null);
+        }}
         onImportProject={handleImportProject}
         mode="create"
       />
